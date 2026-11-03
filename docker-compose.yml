@@ -1,0 +1,28 @@
+services:
+  mise:
+    build: .
+    container_name: mise
+    restart: unless-stopped
+    environment:
+      TZ: ${TZ:-UTC}
+      DATABASE_URL: sqlite:////data/mise.db
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+      LIBREOFFICE_BIN: libreoffice
+      # Every recipe is also saved as JSON here, a plain-text backup you can
+      # keep in git or copy anywhere.
+      RECIPES_EXPORT_PATH: /recipes-export
+      MISE_URL_PREFIX: ${MISE_URL_PREFIX:-}
+    volumes:
+      - mise_data:/data                    # SQLite database + snapshots
+      - ./recipes-export:/recipes-export   # JSON backup of every recipe
+    ports:
+      - "${MISE_BIND:-127.0.0.1}:${MISE_PORT:-8000}:8000"
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request,sys; sys.exit(0 if urllib.request.urlopen('http://localhost:8000/healthz', timeout=2).status==200 else 1)"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
+
+volumes:
+  mise_data:

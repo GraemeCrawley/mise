@@ -1,0 +1,79 @@
+[project]
+name = "mise"
+version = "0.1.0"
+description = "Household meal-planning app: recipe library, week planner, grocery list, recipe-card printing."
+readme = "README.md"
+requires-python = ">=3.12,<3.13"
+license = { text = "All rights reserved" }
+authors = [{ name = "Graeme Crawley" }]
+
+dependencies = [
+    "fastapi>=0.115,<1",
+    "uvicorn[standard]>=0.30,<1",
+    "sqlmodel>=0.0.22,<1",
+    "alembic>=1.13,<2",
+    "apscheduler>=3.10,<4",
+    # XLSX import (one-time + re-import on user-supplied snapshot). Replaces
+    # the dropped sheet-sync path — Mise is the source of truth from day 1.
+    "openpyxl>=3.1,<4",
+    # Deterministic ingredient parser (CRF + Pint). LLM is only the
+    # first-seen verify path for category / canonical-name disagreements.
+    "ingredient-parser-nlp>=2.7,<3",
+    "pint>=0.24,<1",
+    # LLM for first-seen category check + canonical resolver fallback +
+    # intent parser. services/ only.
+    "anthropic>=0.34,<1",
+    # Card rendering (Phase 2; brought in early so Dockerfile already
+    # carries LibreOffice and the import surface is stable).
+    "docxtpl>=0.18,<1",
+    # Observability
+    "prometheus-client>=0.20,<1",
+    # Fetching recipe pages for the add-recipe link import.
+    "httpx>=0.27,<1",
+    # Python's stdlib re-implementations we lean on
+    "python-multipart>=0.0.9",
+]
+
+[dependency-groups]
+dev = [
+    "pytest>=8.0,<9",
+    "pytest-asyncio>=0.23,<1",
+    "ruff>=0.6,<1",
+    "mypy>=1.10,<2",
+    "httpx>=0.27,<1",  # for TestClient
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["mise"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "W", "B", "UP", "TID"]
+ignore = ["E501"]  # line-length handled by formatter
+
+# Enforces "LLM at edges" architectural rule:
+# Anthropic / OpenAI clients are only allowed inside mise/services/.
+[tool.ruff.lint.flake8-tidy-imports.banned-api]
+"anthropic".msg = "LLM clients live in mise/services/ only (per docs/llm-boundaries.md)"
+"openai".msg = "LLM clients live in mise/services/ only (per docs/llm-boundaries.md)"
+
+[tool.ruff.lint.per-file-ignores]
+"mise/services/**.py" = ["TID251"]                  # services/ can import LLM clients
+"tests/**.py" = ["TID251"]                          # tests can mock anything
+"mise/adapters/rest/**.py" = ["B008"]               # FastAPI Depends() in defaults is the canonical pattern
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]
+
+[tool.mypy]
+python_version = "3.12"
+plugins = ["pydantic.mypy"]
+strict_optional = true

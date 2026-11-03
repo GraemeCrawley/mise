@@ -1,0 +1,24 @@
+{
+  "name": "Mise",
+  "short_name": "Mise",
+  "description": "Household meal planning, recipes, and shopping",
+  "start_url": "/mise/app/",
+  "scope": "/mise/app/",
+  "display": "standalone",
+  "background_color": "#FAF7F2",
+  "theme_color": "#FAF7F2",
+  "orientation": "portrait",
+  "share_target": {
+    "action": "/mise/app/add",
+    "method": "GET",
+    "params": { "url": "url", "text": "text", "title": "title" }
+  },
+  "icons": [
+    {
+      "src": "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'><rect width='512' height='512' rx='96' fill='%23FAF7F2'/><text x='50%25' y='50%25' font-size='320' text-anchor='middle' dominant-baseline='central'>🥄</text></svg>",
+      "sizes": "512x512",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

@@ -1,0 +1,44 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+.venv/
+venv/
+*.egg-info/
+build/
+dist/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# Secrets + operational state
+.env
+.env.*
+!.env.example
+/data/
+*.db
+*.db-journal
+*.db-wal
+*.db-shm
+
+# Editor / OS
+.DS_Store
+.idea/
+.vscode/
+*.swp
+
+# Future frontend (in case Phase 1 grows a JS sibling)
+node_modules/
+.next/
+dist/
+
+
+# Agent scratch
+/.claude/worktrees/
+
+.playwright-mcp/
+
+# Your own recipe backups (JSON written by the app)
+/recipes-export/

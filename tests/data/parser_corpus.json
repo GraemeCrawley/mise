@@ -1,0 +1,3296 @@
+[
+  {
+    "source_line": "* shot of white rum optional",
+    "qty": 1.0,
+    "unit": "shot",
+    "optional": true,
+    "parse_failed": false,
+    "category": "Other",
+    "canonical_name": "rum"
+  },
+  {
+    "source_line": "0.125 teaspoon ground nutmeg",
+    "qty": 0.12,
+    "unit": "tsp",
+    "optional": false,
+    "parse_failed": false,
+    "category": "Spices",
+    "canonical_name": "spices_nutmeg_ground"
+  },
+  {
+    "source_line": "0.125 tsp Ground Nutmeg",
+    "qty": 0.12,
+    "unit": "tsp",
+    "optional": false,
+    "parse_failed": false,
+    "category": "Spices",
+    "canonical_name": "spices_nutmeg_ground"
+  },
+  {
+    "source_line": "0.125 tsp Salt",
+    "qty": 0.12,
+    "unit": "tsp",
+    "optional": false,
+    "parse_failed": false,
+    "category": "Spices",
+    "canonical_name": "salt_table_iodized"
+  },
+  {
+    "source_line": "0.25 Inch Ginger",
+    "qty": 0.25,
+    "unit": "ea",
+    "optional": false,
+    "parse_failed": false,
+    "category": "Produce",
+    "canonical_name": "ginger_root_raw"
+  },
+  {
+    "source_line": "0.25 cup low-sodium soy sauce",
+    "qty": 0.25,
+    "unit": "cup",
+    "optional": false,
+    "parse_failed": false,
+    "category": "Sauces",
+    "canonical_name": "soy_sauce_reduced_sodium"
+  },
+  {
+    "source_line": "0.25 cup water",
+    "qty": 0.25,
+    "unit": "cup",
+    "optional": false,
+    "parse_failed": false,
+    "category": "Beverages",
+    "canonical_name": "water_tap"
+  },
+  {
+    "source_line": "0.25 teaspoon white pepper",
+    "qty": 0.25,
+    "unit": "tsp",
+    "optional": false,
+    "parse_failed": false,
+    "category": "Spices",
+    "canonical_name": "spices_pepper_white"
+  },
+  {
+    "source_line": "0.5 Cup White Sugar",
+    "qty": 0.5,
+    "unit": "cup",
+    "optional": false,
+    "parse_failed": false,
+    "category": "Other",
+    "canonical_name": "sugar_white_confectioner_s_powdered"
+  },
+  {
+    "source_line": "0.5 cup Extra virgin olive oil",
+    "qty": 0.5,
+    "unit": "cup",
+    "optional": false,
+    "parse_failed": false,
+    "category": "Pantry",
+    "canonical_name": "oil_olive_extra_virgin"
+  },
+  {
+    "source_line": "0.5 cup oil",
+    "qty": 0.5,
+    "unit": "cup",
+    "optional": false,
+    "parse_failed": false,
+    "category": "Pantry",
+    "canonical_name": "oil_safflower"
+  },
+  {
+    "source_line": "0.5 red onion, finely sliced",
+    "qty": 0.5,
+    "unit": "ea",
+    "optional": false,
+    "parse_failed": false,
+    "category": "Produce",
+    "canonical_name": "onions_red_raw"
+  },
+  {
+    "source_line": "0.5 tablespoon minced fresh rosemary",
+    "qty": 0.5,
+    "unit": "tbsp",
+    "optional": false,
+    "parse_failed": false,
+    "category": "Spices",
+    "canonical_name": "rosemary_fresh"
+  },
+  {
+    "source_line": "0.5 tablespoon sesame oil",
+    "qty": 0.5,
+    "unit": "tbsp",
+    "optional": false,
+    "parse_failed": false,
+    "category": "Other",
+    "canonical_name": "sesame_oil"
+  },
+  {
+    "source_line": "0.5 tablespoons nutmeg",
+    "qty": 0.5,
+    "unit": "tbsp",
+    "optional": false,
+    "parse_failed": false,
+    "category": "Pantry",
+    "canonical_name": "oil_nutmeg_butter"
+  },
+  {
+    "source_line": "0.5 teaspoon baking powder",
+    "qty": 0.5,
+    "unit": "tsp",
+    "optional": false,
+    "parse_failed": false,
+    "category": "Pantry",
+    "canonical_name": "baobab_powder"
+  },
+  {
+    "source_line": "0.5 teaspoon rice wine vinegar",
+    "qty": 0.5,
+    "unit": "tsp",
+    "optional": false,
+    "parse_failed": false,
+    "category": "Pantry",
+    "canonical_name": "vinegar_red_wine"
+  },
+  {
+    "source_line": "0.5 teaspoon salt, divided",
+    "qty": 0.5,
+    "unit": "tsp",
+    "optional": false,
+    "parse_failed": false,
+    "category": "Spices",
+    "canonical_name": "salt_table_iodized"
+  },
+  {
+    "source_line": "0.5 tsp black pepper",
+    "qty": 0.5,
+    "unit": "tsp",
+    "optional": false,
+    "parse_failed": false,
+    "category": "Spices",
+    "canonical_name": "spices_pepper_black"
+  },
+  {
+    "source_line": "0.75 tsp salt",
+    "qty": 0.75,
+    "unit": "tsp",
+    "optional": false,
+    "parse_failed": false,
+    "category": "Spices",
+    "canonical_name": "salt_table_iodized"
+  },
+  {
+    "source_line": "1 (15-oz.) can fire roasted diced tomatoes with green chiles",
+    "qty": 1.0,
+    "unit": "can",
+    "optional": false,
+    "parse_failed": false,
+    "category": "Produce",
+    "canonical_name": "tomatoes_red_ripe_canned_with_green_chilies"
+  },
+  {
+    "source_line": "1 (15-oz.) can refried black or pinto beans or homemade refried beans",
+    "qty": 1.0,
+    "unit": "can",
+    "optional": false,
+    "parse_failed": false,
+    "category": "Other",
+    "canonical_name": "refried_beans"
+  },
+  {
+    "source_line": "1 1/2 cup sugar or less or more to taste",
+    "qty": 1.5,
+    "unit": "cup",
+    "optional": false,
+    "parse_failed": false,
+    "category": "Other",
+    "canonical_name": "sugar_nfs"
+  },
+  {
+    "source_line": "1 1/2 cups water",
+    "qty": 1.5,
+    "unit": "cup",
+    "optional": false,
+    "parse_failed": false,
+    "category": "Beverages",
+    "canonical_name": "water_tap"
+  },
+  {
+    "source_line": "1 1/2 teaspoon chili powder",
+    "qty": 1.5,
+    "unit": "tsp",
+    "optional": false,
+    "parse_failed": false,
+    "category": "Spices",
+    "canonical_name": "spices_chili_powder"
+  },
+  {
+    "source_line": "1 1/2 teaspoon salt",
+    "qty": 1.5,
+    "unit": "tsp",
+    "optional": false,
+    "parse_failed": false,
+    "category": "Spices",
+    "canonical_name": "salt_table_iodized"
+  },
+  {
+    "source_line": "1 1/2 tsp smoked paprika",
+    "qty": 1.5,
+    "unit": "tsp",
+    "optional": false,
+    "parse_failed": false,
+    "category": "Other",
+    "canonical_name": "smoked_paprika"
+  },
+  {
+    "source_line": "1 12 ounce jar roasted red bell peppers, drained and roughly chopped",
+    "qty": 1.0,
+    "unit": "jar",
+    "optional": false,
+    "parse_failed": false,
+    "category": "Produce",
+    "canonical_name": "peppers_bell_red_raw"
+  },
+  {
+    "source_line": "1 15 ounce can garbanzo beans, drained and rinsed",
+    "qty": 1.0,
+    "unit": "can",
+    "optional": false,
+    "parse_failed": false,
+    "category": "Other",
+    "canonical_name": "chickpeas_garbanzo_beans_bengal_gram_dry"
+  },
+  {
+    "source_line": "1 15 ounce can white navel beans, drained and rinsed",
+    "qty": 1.0,
+    "unit": "can",
+    "optional": false,
+    "parse_failed": false,
+    "category": "Other",
+    "canonical_name": "oranges_raw_navels"
+  },
+  {
+    "source_line": "1 4 to 5 pound leg of lamb, bone-in, fat trimmed",
+    "qty": 1.0,
+    "unit": "ea",
+    "optional": false,
+    "parse_failed": false,
+    "category": "Meat",
+    "canonical_name": "frog_legs_raw"
+  },
+  {
+    "source_line": "1 Camembert or other cheese (you can make 1 other Camembert alone in the oven for more cheese)",
+    "qty": 1.0,
+    "unit": "ea",
+    "optional": false,
+    "parse_failed": false,
+    "category": "Dairy",
+    "canonical_name": "cheese_camembert"
+  },
+  {
+    "source_line": "1 Can Guinness Beer",
+    "qty": 1.0,
+    "unit": "can",
+    "optional": false,
+    "parse_failed": false,
+    "category": "Other",
+    "canonical_name": "beer"
+  },
+  {
+    "source_line": "1 Cinnamon Stick",
+    "qty": 1.0,
+    "unit": "ea",
+    "optional": false,
+    "parse_failed": false,
+    "category": "Spices",
+    "canonical_name": "cinnamon_stick"
+  },
+  {
+    "source_line": "1 Extra Tbsp White Sugar",
+    "qty": 1.0,
+    "unit": "extra tbsp",
+    "optional": false,
+    "parse_failed": false,
+    "category": "Other",
+    "canonical_name": "sugar_white_confectioner_s_powdered"
+  },
+  {
+    "source_line": "1 Tablespoon lemon juice",
+    "qty": 1.0,
+    "unit": "tbsp",
+    "optional": false,
+    "parse_failed": false,
+    "category": "Produce",
+    "canonical_name": "lemon_juice_raw"
+  },
+  {
+    "source_line": "1 Tablespoon red wine vinegar",
+    "qty": 1.0,
+    "unit": "tbsp",
+    "optional": false,
+    "parse_failed": false,
+    "category": "Pantry",
+    "canonical_name": "vinegar_red_wine"
+  },
+  {
+    "source_line": "1 Tbsp chili powder",
+    "qty": 1.0,
+    "unit": "tbsp",
+    "optional": false,
+    "parse_failed": false,
+    "category": "Spices",
+    "canonical_name": "spices_chili_powder"
+  },
+  {
+    "source_line": "1 Tbsp roasted sesame seeds",
+    "qty": 1.0,
+    "unit": "tbsp",
+    "optional": false,
+    "parse_failed": false,
+    "category": "Other",
+    "canonical_name": "sesame_seeds"
+  },
+  {
+    "source_line": "1 Tbsp sesame oil",
+    "qty": 1.0,
+    "unit": "tbsp",
+    "optional": false,
+    "parse_failed": false,
+    "category": "Other",
+    "canonical_name": "sesame_oil"
+  },
+  {
+    "source_line": "1 Tbsp soy sauce",
+    "qty": 1.0,
+    "unit": "tbsp",
+    "optional": false,
+    "parse_failed": false,
+    "category": "Sauces",
+    "canonical_name": "soy_sauce"
+  },
+  {
+    "source_line": "1 Tbsp sugar – I used raw sugar",
+    "qty": 1.0,
+    "unit": "tbsp",
+    "optional": false,
+    "parse_failed": false,
+    "category": "Other",
+    "canonical_name": "sugar_nfs"
+  },
+  {
+    "source_line": "1 Tbsp water",
+    "qty": 1.0,
+    "unit": "tbsp",
+    "optional": false,
+    "parse_failed": false,
+    "category": "Beverages",
+    "canonical_name": "water_tap"
+  },
+  {
+    "source_line": "1 Vanilla Bean (Split & Scraped)",
+    "qty": 1.0,
+    "unit": "ea",
+    "optional": false,
+    "parse_failed": false,
+    "category": "Spices",
+    "canonical_name": "yardlong_bean_raw"
+  },
+  {
+    "source_line": "1 bay leaf",
+    "qty": 1.0,
+    "unit": "ea",
+    "optional": false,
+    "parse_failed": false,
+    "category": "Spices",
+    "canonical_name": "spices_bay_leaf"
+  },
+  {
+    "source_line": "1 bottle of dry red wine",
+    "qty": 1.0,
+    "unit": "bottle",
+    "optional": false,
+    "parse_failed": false,
+    "category": "Other",
+    "canonical_name": "wine_red"
+  },
+  {
+    "source_line": "1 bunch flat leaf parsley, roughly chopped",
+    "qty": 1.0,
+    "unit": "bunch",
+    "optional": false,
+    "parse_failed": false,
+    "category": "Produce",
+    "canonical_name": "parsley_raw"
+  },
+  {
+    "source_line": "1 can into beans, rinsed and drained",
+    "qty": 1.0,
+    "unit": "can",
+    "optional": false,
+    "parse_failed": false,
+    "category": "Other",
+    "canonical_name": "yardlong_bean_raw"
+  },
+  {
+    "source_line": "1 cinnamon stick",
+    "qty": 1.0,
+    "unit": "ea",
+    "optional": false,
+    "parse_failed": false,
+    "category": "Other",
+    "canonical_name": "cinnamon_stick"
+  },
+  {
+    "source_line": "1 clove garlic, finely minced",
+    "qty": 1.0,
+    "unit": "clove",
+    "optional": false,
+    "parse_failed": false,
+    "category": "Produce",
+    "canonical_name": "garlic_raw"
+  },
+  {
+    "source_line": "1 cup (250 ml) warm water",
+    "qty": 1.0,
+    "unit": "cup",
+    "optional": false,
+    "parse_failed": false,
+    "category": "Beverages",
+    "canonical_name": "water_tap"
+  },
+  {
+    "source_line": "1 cup corn kernels, drained",
+    "qty": 1.0,
+    "unit": "cup",
+    "optional": false,
+    "parse_failed": false,
+    "category": "Other",
+    "canonical_name": "corn_kernels"
+  },
+  {
+    "source_line": "1 cup frozen berries fruit",
+    "qty": 1.0,
+    "unit": "cup",
+    "optional": false,
+    "parse_failed": false,
+    "category": "Other",
+    "canonical_name": "berries_frozen"
+  },
+  {
+    "source_line": "1 cup granulated sugar",
+    "qty": 1.0,
+    "unit": "cup",
+    "optional": false,
+    "parse_failed": false,
+    "category": "Other",
+    "canonical_name": "sugars_granulated"
+  },
+  {
+    "source_line": "1 cup green peas",
+    "qty": 1.0,
+    "unit": "cup",
+    "optional": false,
+    "parse_failed": false,
+    "category": "Other",
+    "canonical_name": "peas_green_raw"
+  },
+  {
+    "source_line": "1 cup light brown sugar packed",
+    "qty": 1.0,
+    "unit": "cup",
+    "optional": false,
+    "parse_failed": false,
+    "category": "Other",
+    "canonical_name": "sugars_brown"
+  },
+  {
+    "source_line": "1 cup milk of choice",
+    "qty": 1.0,
+    "unit": "cup",
+    "optional": false,
+    "parse_failed": false,
+    "category": "Other",
+    "canonical_name": "chocolate_milk_nesquik_ns_as_to_type_of_milk"
+  },
+  {
+    "source_line": "1 cup oat milk",
+    "qty": 1.0,
+    "unit": "cup",
+    "optional": false,
+    "parse_failed": false,
+    "category": "Other",
+    "canonical_name": "oat_milk"
+  },
+  {
+    "source_line": "1 cup peeled ginger",
+    "qty": 1.0,
+    "unit": "cup",
+    "optional": false,
+    "parse_failed": false,
+    "category": "Produce",
+    "canonical_name": "ginger_root_raw"
+  },
+  {
+    "source_line": "1 cup plain room temp Greek yogurt",
+    "qty": 1.0,
+    "unit": "cup",
+    "optional": false,
+    "parse_failed": false,
+    "category": "Dairy",
+    "canonical_name": "yogurt_greek_plain_lowfat"
+  },
+  {
+    "source_line": "1 cup plain yogurt",
+    "qty": 1.0,
+    "unit": "cup",
+    "optional": false,
+    "parse_failed": false,
+    "category": "Dairy",
+    "canonical_name": "yogurt_plain_nonfat"
+  },
+  {
+    "source_line": "1 cup salted butter, softened",
+    "qty": 1.0,
+    "unit": "cup",
+    "optional": false,
+    "parse_failed": false,
+    "category": "Dairy",
+    "canonical_name": "butter_salted"
+  },
+  {
+    "source_line": "1 cup water",
+    "qty": 1.0,
+    "unit": "cup",
+    "optional": false,
+    "parse_failed": false,
+    "category": "Beverages",
+    "canonical_name": "water_tap"
+  },
+  {
+    "source_line": "1 cup white wine",
+    "qty": 1.0,
+    "unit": "cup",
+    "optional": false,
+    "parse_failed": false,
+    "category": "Other",
+    "canonical_name": "wine_white"
+  },
+  {
+    "source_line": "1 cup whole milk",
+    "qty": 1.0,
+    "unit": "cup",
+    "optional": false,
+    "parse_failed": false,
+    "category": "Dairy",
+    "canonical_name": "milk_whole"
+  },
+  {
+    "source_line": "1 egg yolk with a little water",
+    "qty": 1.0,
+    "unit": "ea",
+    "optional": false,
+    "parse_failed": false,
+    "category": "Beverages",
+    "canonical_name": "water_tap"
+  },
+  {
+    "source_line": "1 garlic clove , finely grated",
+    "qty": 1.0,
+    "unit": "clove",
+    "optional": false,
+    "parse_failed": false,
+    "category": "Produce",
+    "canonical_name": "garlic_raw"
+  },
+  {
+    "source_line": "1 garlic clove, minced",
+    "qty": 1.0,
+    "unit": "clove",
+    "optional": false,
+    "parse_failed": false,
+    "category": "Produce",
+    "canonical_name": "garlic_raw"
+  },
+  {
+    "source_line": "1 green chili",
+    "qty": 1.0,
+    "unit": "ea",
+    "optional": false,
+    "parse_failed": false,
+    "category": "Produce",
+    "canonical_name": "peppers_hot_chili_green_raw"
+  },
+  {
+    "source_line": "1 head of garlic (or more)",
+    "qty": 1.0,
+    "unit": "head",
+    "optional": false,
+    "parse_failed": false,
+    "category": "Produce",
+    "canonical_name": "garlic_raw"
+  },
+  {
+    "source_line": "1 heaped teaspoon black tea leaves",
+    "qty": 1.0,
+    "unit": "heaped teaspoon",
+    "optional": false,
+    "parse_failed": false,
+    "category": "Other",
+    "canonical_name": "tea_hot_leaf_black"
+  },
+  {
+    "source_line": "1 inch cinnamon",
+    "qty": 1.0,
+    "unit": "ea",
+    "optional": false,
+    "parse_failed": false,
+    "category": "Other",
+    "canonical_name": "sugar_cinnamon"
+  },
+  {
+    "source_line": "1 inch ginger, grated",
+    "qty": 1.0,
+    "unit": "ea",
+    "optional": false,
+    "parse_failed": false,
+    "category": "Produce",
+    "canonical_name": "ginger_root_raw"
+  },
+  {
+    "source_line": "1 inch long cinnamon bark",
+    "qty": 1.0,
+    "unit": "ea",
+    "optional": false,
+    "parse_failed": false,
+    "category": "Other",
+    "canonical_name": "inch_long_cinnamon_bark"
+  },
+  {
+    "source_line": "1 jalapeño, seeds removed, finely chopped",
+    "qty": 1.0,
+    "unit": "ea",
+    "optional": false,
+    "parse_failed": false,
+    "category": "Other",
+    "canonical_name": "jalape_o"
+  },
+  {
+    "source_line": "1 large butternut squash halved, seedless",
+    "qty": 1.0,
+    "unit": "ea",
+    "optional": false,
+    "parse_failed": false,
+    "category": "Other",
+    "canonical_name": "squash_winter_butternut_raw"
+  },
+  {
+    "source_line": "1 large can diced tomatoes**, with their juices",
+    "qty": 1.0,
+    "unit": "can",
+    "optional": false,
+    "parse_failed": false,
+    "category": "Produce",
+    "canonical_name": "tomatoes_canned_red_ripe_diced"
+  },
+  {
+    "source_line": "1 large french baguette",
+    "qty": 1.0,
+    "unit": "ea",
+    "optional": false,
+    "parse_failed": false,
+    "category": "Other",
+    "canonical_name": "large_french_baguette"
+  },
+  {
+    "source_line": "1 large onion, chopped",
+    "qty": 1.0,
+    "unit": "ea",
+    "optional": false,
+    "parse_failed": false,
+    "category": "Produce",
+    "canonical_name": "onions_raw"
+  },
+  {
+    "source_line": "1 large red bell pepper, chopped",
+    "qty": 1.0,
+    "unit": "ea",
+    "optional": false,
+    "parse_failed": false,
+    "category": "Produce",
+    "canonical_name": "peppers_bell_red_raw"
+  },
+  {
+    "source_line": "1 large yellow onion, thinly sliced",
+    "qty": 1.0,
+    "unit": "ea",
+    "optional": false,
+    "parse_failed": false,
+    "category": "Produce",
+    "canonical_name": "onions_yellow_raw"
+  },
+  {
+    "source_line": "1 lb. ground beef",
+    "qty": 1.0,
+    "unit": "lb",
+    "optional": false,
+    "parse_failed": false,
+    "category": "Meat",
+    "canonical_name": "beef_ground"
+  },
+  {
+    "source_line": "1 medium red onion, chopped",
+    "qty": 1.0,
+    "unit": "ea",
+    "optional": false,
+    "parse_failed": false,
+    "category": "Produce",
+    "canonical_name": "onions_red_raw"
+  },
+  {
+    "source_line": "1 onion",
+    "qty": 1.0,
+    "unit": "ea",
+    "optional": false,
+    "parse_failed": false,
+    "category": "Produce",
+    "canonical_name": "onions_raw"
+  },
+  {
+    "source_line": "1 orange, sliced into rounds",
+    "qty": 1.0,
+    "unit": "ea",
+    "optional": false,
+    "parse_failed": false,
+    "category": "Other",
+    "canonical_name": "orange_raw"
+  },
+  {
+    "source_line": "1 pod garlic",
+    "qty": 1.0,
+    "unit": "pod",
+    "optional": false,
+    "parse_failed": false,
+    "category": "Produce",
+    "canonical_name": "garlic_raw"
+  },
+  {
+    "source_line": "1 pound flank steak",
+    "qty": 1.0,
+    "unit": "lb",
+    "optional": false,
+    "parse_failed": false,
+    "category": "Meat",
+    "canonical_name": "beef_steak_flank"
+  },
+  {
+    "source_line": "1 scoop protein powder (vanilla)",
+    "qty": 1.0,
+    "unit": "scoop",
+    "optional": false,
+    "parse_failed": false,
+    "category": "Pantry",
+    "canonical_name": "nutritional_powder_mix_eas_whey_protein_powder"
+  },
+  {
+    "source_line": "1 sliced tomato",
+    "qty": 1.0,
+    "unit": "ea",
+    "optional": false,
+    "parse_failed": false,
+    "category": "Produce",
+    "canonical_name": "tomatoes_raw"
+  },
+  {
+    "source_line": "1 small carrot",
+    "qty": 1.0,
+    "unit": "ea",
+    "optional": false,
+    "parse_failed": false,
+    "category": "Produce",
+    "canonical_name": "carrots_raw"
+  },
+  {
+    "source_line": "1 star anise pod",
+    "qty": 1.0,
+    "unit": "ea",
+    "optional": false,
+    "parse_failed": false,
+    "category": "Other",
+    "canonical_name": "drumstick_pods_raw"
+  },
+  {
+    "source_line": "1 sweet green pepper",
+    "qty": 1.0,
+    "unit": "ea",
+    "optional": false,
+    "parse_failed": false,
+    "category": "Produce",
+    "canonical_name": "peppers_sweet_green_raw"
+  },
+  {
+    "source_line": "1 tablespoon chopped fresh sage",
+    "qty": 1.0,
+    "unit": "tbsp",
+    "optional": false,
+    "parse_failed": false,
+    "category": "Other",
+    "canonical_name": "chopped_fresh_sage"
+  },
+  {
+    "source_line": "1 tablespoon cornstarch",
+    "qty": 1.0,
+    "unit": "tbsp",
+    "optional": false,
+    "parse_failed": false,
+    "category": "Other",
+    "canonical_name": "cornstarch"
+  },
+  {
+    "source_line": "1 tablespoon oil",
+    "qty": 1.0,
+    "unit": "tbsp",
+    "optional": false,
+    "parse_failed": false,
+    "category": "Pantry",
+    "canonical_name": "oil_safflower"
+  },
+  {
+    "source_line": "1 tablespoon olive oil",
+    "qty": 1.0,
+    "unit": "tbsp",
+    "optional": false,
+    "parse_failed": false,
+    "category": "Pantry",
+    "canonical_name": "olive_oil"
+  },
+  {
+    "source_line": "1 tablespoon paprika",
+    "qty": 1.0,
+    "unit": "tbsp",
+    "optional": false,
+    "parse_failed": false,
+    "category": "Produce",
+    "canonical_name": "peppers_hungarian_raw"
+  },
+  {
+    "source_line": "1 tablespoon salt",
+    "qty": 1.0,
+    "unit": "tbsp",
+    "optional": false,
+    "parse_failed": false,
+    "category": "Spices",
+    "canonical_name": "salt_table_iodized"
+  },
+  {
+    "source_line": "1 tablespoon sliced fresh ginger with the skin on",
+    "qty": 1.0,
+    "unit": "tbsp",
+    "optional": false,
+    "parse_failed": false,
+    "category": "Produce",
+    "canonical_name": "ginger_root_raw"
+  },
+  {
+    "source_line": "1 tablespoon tomato paste",
+    "qty": 1.0,
+    "unit": "tbsp",
+    "optional": false,
+    "parse_failed": false,
+    "category": "Produce",
+    "canonical_name": "tomato_paste_canned_without_salt_added"
+  },
+  {
+    "source_line": "1 tablespoon vegetable oil",
+    "qty": 1.0,
+    "unit": "tbsp",
+    "optional": false,
+    "parse_failed": false,
+    "category": "Other",
+    "canonical_name": "vegetable_oil_nfs"
+  },
+  {
+    "source_line": "1 tablespoons paprika",
+    "qty": 1.0,
+    "unit": "tbsp",
+    "optional": false,
+    "parse_failed": false,
+    "category": "Produce",
+    "canonical_name": "peppers_hungarian_raw"
+  },
+  {
+    "source_line": "1 tbsp butter",
+    "qty": 1.0,
+    "unit": "tbsp",
+    "optional": false,
+    "parse_failed": false,
+    "category": "Dairy",
+    "canonical_name": "butter_stick_unsalted"
+  },
+  {
+    "source_line": "1 tbsp chia seeds",
+    "qty": 1.0,
+    "unit": "tbsp",
+    "optional": false,
+    "parse_failed": false,
+    "category": "Other",
+    "canonical_name": "chia_seeds"
+  },
+  {
+    "source_line": "1 tbsp chili cayenne powder",
+    "qty": 1.0,
+    "unit": "tbsp",
+    "optional": false,
+    "parse_failed": false,
+    "category": "Spices",
+    "canonical_name": "spices_chili_powder"
+  },
+  {
+    "source_line": "1 tbsp finely chopped parsley",
+    "qty": 1.0,
+    "unit": "tbsp",
+    "optional": false,
+    "parse_failed": false,
+    "category": "Produce",
+    "canonical_name": "parsley_raw"
+  },
+  {
+    "source_line": "1 tbsp hemp hearts",
+    "qty": 1.0,
+    "unit": "tbsp",
+    "optional": false,
+    "parse_failed": false,
+    "category": "Other",
+    "canonical_name": "hearts_of_palm_raw"
+  },
+  {
+    "source_line": "1 tbsp honey",
+    "qty": 1.0,
+    "unit": "tbsp",
+    "optional": false,
+    "parse_failed": false,
+    "category": "Pantry",
+    "canonical_name": "honey"
+  },
+  {
+    "source_line": "1 tbsp lemon juice",
+    "qty": 1.0,
+    "unit": "tbsp",
+    "optional": false,
+    "parse_failed": false,
+    "category": "Produce",
+    "canonical_name": "lemon_juice_raw"
+  },
+  {
+    "source_line": "1 tbsp peanut butter",
+    "qty": 1.0,
+    "unit": "tbsp",
+    "optional": false,
+    "parse_failed": false,
+    "category": "Pantry",
+    "canonical_name": "peanut_butter"
+  },
+  {
+    "source_line": "1 tbsp. taco seasoning",
+    "qty": 1.0,
+    "unit": "tbsp",
+    "optional": false,
+    "parse_failed": false,
+    "category": "Other",
+    "canonical_name": "taco_seasoning"
+  },
+  {
+    "source_line": "1 teaspoon Worcestershire sauce",
+    "qty": 1.0,
+    "unit": "tsp",
+    "optional": false,
+    "parse_failed": false,
+    "category": "Sauces",
+    "canonical_name": "sauce_worcestershire"
+  },
+  {
+    "source_line": "1 teaspoon all-natural garlic powder",
+    "qty": 1.0,
+    "unit": "tsp",
+    "optional": false,
+    "parse_failed": false,
+    "category": "Spices",
+    "canonical_name": "spices_garlic_powder"
+  },
+  {
+    "source_line": "1 teaspoon baking soda",
+    "qty": 1.0,
+    "unit": "tsp",
+    "optional": false,
+    "parse_failed": false,
+    "category": "Other",
+    "canonical_name": "leavening_agents_baking_soda"
+  },
+  {
+    "source_line": "1 teaspoon cumin",
+    "qty": 1.0,
+    "unit": "tsp",
+    "optional": false,
+    "parse_failed": false,
+    "category": "Spices",
+    "canonical_name": "spices_cumin_seed"
+  },
+  {
+    "source_line": "1 teaspoon dried oregano",
+    "qty": 1.0,
+    "unit": "tsp",
+    "optional": false,
+    "parse_failed": false,
+    "category": "Spices",
+    "canonical_name": "spices_oregano_dried"
+  },
+  {
+    "source_line": "1 teaspoon dried rose petals (optional)",
+    "qty": 1.0,
+    "unit": "tsp",
+    "optional": true,
+    "parse_failed": false,
+    "category": "Other",
+    "canonical_name": "dried_rose_petals"
+  },
+  {
+    "source_line": "1 teaspoon garlic paste",
+    "qty": 1.0,
+    "unit": "tsp",
+    "optional": false,
+    "parse_failed": false,
+    "category": "Produce",
+    "canonical_name": "garlic_raw"
+  },
+  {
+    "source_line": "1 teaspoon grated fresh ginger",
+    "qty": 1.0,
+    "unit": "tsp",
+    "optional": false,
+    "parse_failed": false,
+    "category": "Other",
+    "canonical_name": "grated_fresh_ginger"
+  },
+  {
+    "source_line": "1 teaspoon kosher salt",
+    "qty": 1.0,
+    "unit": "tsp",
+    "optional": false,
+    "parse_failed": false,
+    "category": "Other",
+    "canonical_name": "kosher_salt"
+  },
+  {
+    "source_line": "1 teaspoon maple syrup, or honey, optional",
+    "qty": 1.0,
+    "unit": "tsp",
+    "optional": true,
+    "parse_failed": false,
+    "category": "Pantry",
+    "canonical_name": "syrups_maple"
+  },
+  {
+    "source_line": "1 teaspoon onion powder",
+    "qty": 1.0,
+    "unit": "tsp",
+    "optional": false,
+    "parse_failed": false,
+    "category": "Spices",
+    "canonical_name": "spices_onion_powder"
+  },
+  {
+    "source_line": "1 teaspoon paprika, more for later",
+    "qty": 1.0,
+    "unit": "tsp",
+    "optional": false,
+    "parse_failed": false,
+    "category": "Produce",
+    "canonical_name": "peppers_hungarian_raw"
+  },
+  {
+    "source_line": "1 teaspoon salt",
+    "qty": 1.0,
+    "unit": "tsp",
+    "optional": false,
+    "parse_failed": false,
+    "category": "Spices",
+    "canonical_name": "salt_table_iodized"
+  },
+  {
+    "source_line": "1 teaspoon sea salt",
+    "qty": 1.0,
+    "unit": "tsp",
+    "optional": false,
+    "parse_failed": false,
+    "category": "Spices",
+    "canonical_name": "salt_table_iodized"
+  },
+  {
+    "source_line": "1 teaspoon sugar (optional)",
+    "qty": 1.0,
+    "unit": "tsp",
+    "optional": true,
+    "parse_failed": false,
+    "category": "Other",
+    "canonical_name": "sugar_nfs"
+  },
+  {
+    "source_line": "1 teaspoon whole peppercorn",
+    "qty": 1.0,
+    "unit": "tsp",
+    "optional": false,
+    "parse_failed": false,
+    "category": "Other",
+    "canonical_name": "whole_peppercorn"
+  },
+  {
+    "source_line": "1 to 2 tablespoons butter, to taste",
+    "qty": 1.0,
+    "unit": "tbsp",
+    "optional": false,
+    "parse_failed": false,
+    "category": "Dairy",
+    "canonical_name": "butter_stick_unsalted"
+  },
+  {
+    "source_line": "1 tomato",
+    "qty": 1.0,
+    "unit": "ea",
+    "optional": false,
+    "parse_failed": false,
+    "category": "Produce",
+    "canonical_name": "tomatoes_raw"
+  },
+  {
+    "source_line": "1 tsp Dijon mustard",
+    "qty": 1.0,
+    "unit": "tsp",
+    "optional": false,
+    "parse_failed": false,
+    "category": "Sauces",
+    "canonical_name": "mustard_greens_raw"
+  },
+  {
+    "source_line": "1 tsp brown sugar",
+    "qty": 1.0,
+    "unit": "tsp",
+    "optional": false,
+    "parse_failed": false,
+    "category": "Other",
+    "canonical_name": "sugars_brown"
+  },
+  {
+    "source_line": "1 tsp fine sea salt",
+    "qty": 1.0,
+    "unit": "tsp",
+    "optional": false,
+    "parse_failed": false,
+    "category": "Other",
+    "canonical_name": "fine_sea_salt"
+  },
+  {
+    "source_line": "1 tsp garam masala",
+    "qty": 1.0,
+    "unit": "tsp",
+    "optional": false,
+    "parse_failed": false,
+    "category": "Meat",
+    "canonical_name": "fish_sunfish_pumpkin_seed_raw"
+  },
+  {
+    "source_line": "1 tsp ground black pepper",
+    "qty": 1.0,
+    "unit": "tsp",
+    "optional": false,
+    "parse_failed": false,
+    "category": "Spices",
+    "canonical_name": "spices_pepper_black"
+  },
+  {
+    "source_line": "1 tsp instant yeast",
+    "qty": 1.0,
+    "unit": "tsp",
+    "optional": false,
+    "parse_failed": false,
+    "category": "Other",
+    "canonical_name": "instant_yeast"
+  },
+  {
+    "source_line": "1 tsp kasuri methi",
+    "qty": 1.0,
+    "unit": "tsp",
+    "optional": false,
+    "parse_failed": false,
+    "category": "Other",
+    "canonical_name": "kasuri_methi"
+  },
+  {
+    "source_line": "1 tsp minced garlic",
+    "qty": 1.0,
+    "unit": "tsp",
+    "optional": false,
+    "parse_failed": false,
+    "category": "Produce",
+    "canonical_name": "garlic_raw"
+  },
+  {
+    "source_line": "1 tsp of white wine",
+    "qty": 1.0,
+    "unit": "tsp",
+    "optional": false,
+    "parse_failed": false,
+    "category": "Other",
+    "canonical_name": "wine_white"
+  },
+  {
+    "source_line": "1 tsp paprika, preferably smoked paprika",
+    "qty": 1.0,
+    "unit": "tsp",
+    "optional": false,
+    "parse_failed": false,
+    "category": "Produce",
+    "canonical_name": "peppers_hungarian_raw"
+  },
+  {
+    "source_line": "1 tsp red chili powder",
+    "qty": 1.0,
+    "unit": "tsp",
+    "optional": false,
+    "parse_failed": false,
+    "category": "Spices",
+    "canonical_name": "spices_chili_powder"
+  },
+  {
+    "source_line": "1 tsp salt",
+    "qty": 1.0,
+    "unit": "tsp",
+    "optional": false,
+    "parse_failed": false,
+    "category": "Spices",
+    "canonical_name": "salt_table_iodized"
+  },
+  {
+    "source_line": "1 tsp sugar",
+    "qty": 1.0,
+    "unit": "tsp",
+    "optional": false,
+    "parse_failed": false,
+    "category": "Other",
+    "canonical_name": "sugar_nfs"
+  },
+  {
+    "source_line": "1 tsp sugar (optional)",
+    "qty": 1.0,
+    "unit": "tsp",
+    "optional": true,
+    "parse_failed": false,
+    "category": "Other",
+    "canonical_name": "sugar_nfs"
+  },
+  {
+    "source_line": "1 tsp vinegar – I used apple vinegar",
+    "qty": 1.0,
+    "unit": "tsp",
+    "optional": false,
+    "parse_failed": false,
+    "category": "Pantry",
+    "canonical_name": "vinegar"
+  },
+  {
+    "source_line": "1 tsp. kosher salt, plus more",
+    "qty": 1.0,
+    "unit": "tsp",
+    "optional": false,
+    "parse_failed": false,
+    "category": "Other",
+    "canonical_name": "kosher_salt"
+  },
+  {
+    "source_line": "1 yellow onion",
+    "qty": 1.0,
+    "unit": "ea",
+    "optional": false,
+    "parse_failed": false,
+    "category": "Produce",
+    "canonical_name": "onions_yellow_raw"
+  },
+  {
+    "source_line": "1 yellow onion, peeled and cut into wedges",
+    "qty": 1.0,
+    "unit": "ea",
+    "optional": false,
+    "parse_failed": false,
+    "category": "Produce",
+    "canonical_name": "onions_yellow_raw"
+  },
+  {
+    "source_line": "1-2 green cardamoms",
+    "qty": 1.0,
+    "unit": "ea",
+    "optional": false,
+    "parse_failed": false,
+    "category": "Other",
+    "canonical_name": "green_cardamoms"
+  },
+  {
+    "source_line": "1.5 cups non-fat plain Greek yogurt",
+    "qty": 1.5,
+    "unit": "cup",
+    "optional": false,
+    "parse_failed": false,
+    "category": "Dairy",
+    "canonical_name": "yogurt_greek_plain_nonfat"
+  },
+  {
+    "source_line": "1.5 lbs. flank steak",
+    "qty": 1.5,
+    "unit": "lb",
+    "optional": false,
+    "parse_failed": false,
+    "category": "Meat",
+    "canonical_name": "beef_steak_flank"
+  },
+  {
+    "source_line": "1.5 pounds ground pork",
+    "qty": 1.5,
+    "unit": "lb",
+    "optional": false,
+    "parse_failed": false,
+    "category": "Meat",
+    "canonical_name": "pork_ground"
+  },
+  {
+    "source_line": "1.5 tablespoons vinegar",
+    "qty": 1.5,
+    "unit": "tbsp",
+    "optional": false,
+    "parse_failed": false,
+    "category": "Pantry",
+    "canonical_name": "vinegar"
+  },
+  {
+    "source_line": "1.5 tbsp oil ghee",
+    "qty": 1.5,
+    "unit": "tbsp",
+    "optional": false,
+    "parse_failed": false,
+    "category": "Other",
+    "canonical_name": "ghee_clarified_butter"
+  },
+  {
+    "source_line": "1.5 teaspoons sambal oelek",
+    "qty": 1.5,
+    "unit": "tsp",
+    "optional": false,
+    "parse_failed": false,
+    "category": "Other",
+    "canonical_name": "sambal_oelek"
+  },
+  {
+    "source_line": "1.5 teaspoons smoked paprika*",
+    "qty": 1.5,
+    "unit": "tsp",
+    "optional": false,
+    "parse_failed": false,
+    "category": "Other",
+    "canonical_name": "smoked_paprika"
+  },
+  {
+    "source_line": "1/2 bunch cilantro, roughly chopped",
+    "qty": 0.5,
+    "unit": "bunche",
+    "optional": false,
+    "parse_failed": false,
+    "category": "Produce",
+    "canonical_name": "cilantro_raw"
+  },
+  {
+    "source_line": "1/2 cup apple cider vinegar",
+    "qty": 0.5,
+    "unit": "cup",
+    "optional": false,
+    "parse_failed": false,
+    "category": "Pantry",
+    "canonical_name": "vinegar_cider"
+  },
+  {
+    "source_line": "1/2 cup chopped red onion",
+    "qty": 0.5,
+    "unit": "cup",
+    "optional": false,
+    "parse_failed": false,
+    "category": "Produce",
+    "canonical_name": "onions_red_raw"
+  },
+  {
+    "source_line": "1/2 cup condensed milk or less or more to taste",
+    "qty": 0.5,
+    "unit": "cup",
+    "optional": false,
+    "parse_failed": false,
+    "category": "Dairy",
+    "canonical_name": "milk_condensed_sweetened"
+  },
+  {
+    "source_line": "1/2 cup dry white wine",
+    "qty": 0.5,
+    "unit": "cup",
+    "optional": false,
+    "parse_failed": false,
+    "category": "Other",
+    "canonical_name": "wine_white"
+  },
+  {
+    "source_line": "1/2 cup fresh lemon juice",
+    "qty": 0.5,
+    "unit": "cup",
+    "optional": false,
+    "parse_failed": false,
+    "category": "Produce",
+    "canonical_name": "lemon_juice_raw"
+  },
+  {
+    "source_line": "1/2 cup grated ginger",
+    "qty": 0.5,
+    "unit": "cup",
+    "optional": false,
+    "parse_failed": false,
+    "category": "Produce",
+    "canonical_name": "ginger_root_raw"
+  },
+  {
+    "source_line": "1/2 cup maple syrup",
+    "qty": 0.5,
+    "unit": "cup",
+    "optional": false,
+    "parse_failed": false,
+    "category": "Pantry",
+    "canonical_name": "syrups_maple"
+  },
+  {
+    "source_line": "1/2 cup mini bocconcini",
+    "qty": 0.5,
+    "unit": "cup",
+    "optional": false,
+    "parse_failed": false,
+    "category": "Other",
+    "canonical_name": "mini_bocconcini"
+  },
+  {
+    "source_line": "1/2 pound potatoes",
+    "qty": 0.5,
+    "unit": "lb",
+    "optional": false,
+    "parse_failed": false,
+    "category": "Produce",
+    "canonical_name": "potatoes_raw_skin"
+  },
+  {
+    "source_line": "1/2 small red onion, diced",
+    "qty": 0.5,
+    "unit": "ea",
+    "optional": false,
+    "parse_failed": false,
+    "category": "Produce",
+    "canonical_name": "onions_red_raw"
+  },
+  {
+    "source_line": "1/2 teaspoon dried oregano",
+    "qty": 0.5,
+    "unit": "tsp",
+    "optional": false,
+    "parse_failed": false,
+    "category": "Spices",
+    "canonical_name": "spices_oregano_dried"
+  },
+  {
+    "source_line": "1/2 teaspoon fennel seeds",
+    "qty": 0.5,
+    "unit": "tsp",
+    "optional": false,
+    "parse_failed": false,
+    "category": "Spices",
+    "canonical_name": "spices_fennel_seed"
+  },
+  {
+    "source_line": "1/2 teaspoon salt",
+    "qty": 0.5,
+    "unit": "tsp",
+    "optional": false,
+    "parse_failed": false,
+    "category": "Spices",
+    "canonical_name": "salt_table_iodized"
+  },
+  {
+    "source_line": "1/2 tsp cooking kosher salt",
+    "qty": 0.5,
+    "unit": "tsp",
+    "optional": false,
+    "parse_failed": false,
+    "category": "Other",
+    "canonical_name": "cooking_kosher_salt"
+  },
+  {
+    "source_line": "1/2 tsp coriander powder",
+    "qty": 0.5,
+    "unit": "tsp",
+    "optional": false,
+    "parse_failed": false,
+    "category": "Other",
+    "canonical_name": "coriander_powder"
+  },
+  {
+    "source_line": "1/2 tsp dried oregano",
+    "qty": 0.5,
+    "unit": "tsp",
+    "optional": false,
+    "parse_failed": false,
+    "category": "Spices",
+    "canonical_name": "spices_oregano_dried"
+  },
+  {
+    "source_line": "1/2 tsp fine sea salt",
+    "qty": 0.5,
+    "unit": "tsp",
+    "optional": false,
+    "parse_failed": false,
+    "category": "Other",
+    "canonical_name": "fine_sea_salt"
+  },
+  {
+    "source_line": "1/2 tsp garlic powder",
+    "qty": 0.5,
+    "unit": "tsp",
+    "optional": false,
+    "parse_failed": false,
+    "category": "Spices",
+    "canonical_name": "spices_garlic_powder"
+  },
+  {
+    "source_line": "1/2 tsp ground pepper",
+    "qty": 0.5,
+    "unit": "tsp",
+    "optional": false,
+    "parse_failed": false,
+    "category": "Other",
+    "canonical_name": "ground_pepper"
+  },
+  {
+    "source_line": "1/2 tsp onion powder",
+    "qty": 0.5,
+    "unit": "tsp",
+    "optional": false,
+    "parse_failed": false,
+    "category": "Spices",
+    "canonical_name": "spices_onion_powder"
+  },
+  {
+    "source_line": "1/3 cup soy sauce",
+    "qty": 0.33,
+    "unit": "cup",
+    "optional": false,
+    "parse_failed": false,
+    "category": "Sauces",
+    "canonical_name": "soy_sauce"
+  },
+  {
+    "source_line": "1/3 cup yogurt curd",
+    "qty": 0.33,
+    "unit": "cup",
+    "optional": false,
+    "parse_failed": false,
+    "category": "Other",
+    "canonical_name": "frozen_yogurt_nfs"
+  },
+  {
+    "source_line": "1/4 cup brandy (or orange liqueur)",
+    "qty": 0.25,
+    "unit": "cup",
+    "optional": false,
+    "parse_failed": false,
+    "category": "Other",
+    "canonical_name": "brandy"
+  },
+  {
+    "source_line": "1/4 cup extra virgin olive oil",
+    "qty": 0.25,
+    "unit": "cup",
+    "optional": false,
+    "parse_failed": false,
+    "category": "Pantry",
+    "canonical_name": "oil_olive_extra_virgin"
+  },
+  {
+    "source_line": "1/4 cup maple syrup",
+    "qty": 0.25,
+    "unit": "cup",
+    "optional": false,
+    "parse_failed": false,
+    "category": "Pantry",
+    "canonical_name": "syrups_maple"
+  },
+  {
+    "source_line": "1/4 cup mayo",
+    "qty": 0.25,
+    "unit": "cup",
+    "optional": false,
+    "parse_failed": false,
+    "category": "Other",
+    "canonical_name": "mayo"
+  },
+  {
+    "source_line": "1/4 cup olive oil",
+    "qty": 0.25,
+    "unit": "cup",
+    "optional": false,
+    "parse_failed": false,
+    "category": "Pantry",
+    "canonical_name": "olive_oil"
+  },
+  {
+    "source_line": "1/4 cup peanut butter",
+    "qty": 0.25,
+    "unit": "cup",
+    "optional": false,
+    "parse_failed": false,
+    "category": "Pantry",
+    "canonical_name": "peanut_butter"
+  },
+  {
+    "source_line": "1/4 sour cream",
+    "qty": 0.25,
+    "unit": "ea",
+    "optional": false,
+    "parse_failed": false,
+    "category": "Dairy",
+    "canonical_name": "cream_sour_cultured"
+  },
+  {
+    "source_line": "1/4 teaspoon crushed red pepper",
+    "qty": 0.25,
+    "unit": "tsp",
+    "optional": false,
+    "parse_failed": false,
+    "category": "Produce",
+    "canonical_name": "peppers_bell_red_raw"
+  },
+  {
+    "source_line": "1/4 teaspoon dried oregano",
+    "qty": 0.25,
+    "unit": "tsp",
+    "optional": false,
+    "parse_failed": false,
+    "category": "Spices",
+    "canonical_name": "spices_oregano_dried"
+  },
+  {
+    "source_line": "1/4 teaspoon salt (optional)",
+    "qty": 0.25,
+    "unit": "tsp",
+    "optional": true,
+    "parse_failed": false,
+    "category": "Spices",
+    "canonical_name": "salt_table_iodized"
+  },
+  {
+    "source_line": "1/4 tsp black pepper",
+    "qty": 0.25,
+    "unit": "tsp",
+    "optional": false,
+    "parse_failed": false,
+    "category": "Spices",
+    "canonical_name": "spices_pepper_black"
+  },
+  {
+    "source_line": "1/4 tsp minced garlic",
+    "qty": 0.25,
+    "unit": "tsp",
+    "optional": false,
+    "parse_failed": false,
+    "category": "Produce",
+    "canonical_name": "garlic_raw"
+  },
+  {
+    "source_line": "1/4 tsp salt",
+    "qty": 0.25,
+    "unit": "tsp",
+    "optional": false,
+    "parse_failed": false,
+    "category": "Spices",
+    "canonical_name": "salt_table_iodized"
+  },
+  {
+    "source_line": "1/4 tsp turmeric",
+    "qty": 0.25,
+    "unit": "tsp",
+    "optional": false,
+    "parse_failed": false,
+    "category": "Spices",
+    "canonical_name": "spices_turmeric_ground"
+  },
+  {
+    "source_line": "10 Pita Bread",
+    "qty": 10.0,
+    "unit": "ea",
+    "optional": false,
+    "parse_failed": false,
+    "category": "Bakery",
+    "canonical_name": "bread_pita"
+  },
+  {
+    "source_line": "100 ml B12",
+    "qty": 100.0,
+    "unit": "ml",
+    "optional": false,
+    "parse_failed": false,
+    "category": "Beverages",
+    "canonical_name": "beverages_coconut_milk_sweetened_fortified_with_calcium_vitamins_a_b12_d2"
+  },
+  {
+    "source_line": "100g beef mince (or other cuts)",
+    "qty": 100.0,
+    "unit": "g",
+    "optional": false,
+    "parse_failed": false,
+    "category": "Meat",
+    "canonical_name": "beef_ground_raw"
+  },
+  {
+    "source_line": "100g shiitake mushroom",
+    "qty": 100.0,
+    "unit": "g",
+    "optional": false,
+    "parse_failed": false,
+    "category": "Produce",
+    "canonical_name": "mushrooms_shiitake_raw"
+  },
+  {
+    "source_line": "12 cashews",
+    "qty": 12.0,
+    "unit": "ea",
+    "optional": false,
+    "parse_failed": false,
+    "category": "Other",
+    "canonical_name": "nuts_cashew_nuts_raw"
+  },
+  {
+    "source_line": "12 cups cos romaine lettuce, chopped",
+    "qty": 12.0,
+    "unit": "cup",
+    "optional": false,
+    "parse_failed": false,
+    "category": "Produce",
+    "canonical_name": "lettuce_cos_or_romaine_raw"
+  },
+  {
+    "source_line": "15 garlic cloves, peeled",
+    "qty": 15.0,
+    "unit": "clove",
+    "optional": false,
+    "parse_failed": false,
+    "category": "Produce",
+    "canonical_name": "garlic_raw"
+  },
+  {
+    "source_line": "150 g/5 oz bacon, cooked & chopped (optional)",
+    "qty": 150.0,
+    "unit": "g",
+    "optional": true,
+    "parse_failed": false,
+    "category": "Meat",
+    "canonical_name": "beef_bacon_cooked"
+  },
+  {
+    "source_line": "180g bacon, speck or pancetta, diced",
+    "qty": 180.0,
+    "unit": "g",
+    "optional": false,
+    "parse_failed": false,
+    "category": "Meat",
+    "canonical_name": "beef_bacon_cooked"
+  },
+  {
+    "source_line": "2 Cups (500g) Heavy Cream",
+    "qty": 2.0,
+    "unit": "cup",
+    "optional": false,
+    "parse_failed": false,
+    "category": "Dairy",
+    "canonical_name": "cream_heavy"
+  },
+  {
+    "source_line": "2 Tablespoon olive oil",
+    "qty": 2.0,
+    "unit": "tbsp",
+    "optional": false,
+    "parse_failed": false,
+    "category": "Pantry",
+    "canonical_name": "olive_oil"
+  },
+  {
+    "source_line": "2 Tbsp Light Brown Sugar",
+    "qty": 2.0,
+    "unit": "tbsp",
+    "optional": false,
+    "parse_failed": false,
+    "category": "Other",
+    "canonical_name": "sugars_brown"
+  },
+  {
+    "source_line": "2 Tbsp gochujang",
+    "qty": 2.0,
+    "unit": "tbsp",
+    "optional": false,
+    "parse_failed": false,
+    "category": "Other",
+    "canonical_name": "gochujang"
+  },
+  {
+    "source_line": "2 avocados, cut into chunks",
+    "qty": 2.0,
+    "unit": "ea",
+    "optional": false,
+    "parse_failed": false,
+    "category": "Produce",
+    "canonical_name": "avocado_raw"
+  },
+  {
+    "source_line": "2 bay leaves",
+    "qty": 2.0,
+    "unit": "ea",
+    "optional": false,
+    "parse_failed": false,
+    "category": "Spices",
+    "canonical_name": "spices_bay_leaf"
+  },
+  {
+    "source_line": "2 cans black beans, rinsed and drained",
+    "qty": 2.0,
+    "unit": "can",
+    "optional": false,
+    "parse_failed": false,
+    "category": "Other",
+    "canonical_name": "black_beans_nfs"
+  },
+  {
+    "source_line": "2 cinnamon sticks",
+    "qty": 2.0,
+    "unit": "ea",
+    "optional": false,
+    "parse_failed": false,
+    "category": "Other",
+    "canonical_name": "cinnamon_sticks"
+  },
+  {
+    "source_line": "2 cloves garlic, chopped",
+    "qty": 2.0,
+    "unit": "clove",
+    "optional": false,
+    "parse_failed": false,
+    "category": "Produce",
+    "canonical_name": "garlic_raw"
+  },
+  {
+    "source_line": "2 cloves garlic, crushed",
+    "qty": 2.0,
+    "unit": "clove",
+    "optional": false,
+    "parse_failed": false,
+    "category": "Produce",
+    "canonical_name": "garlic_raw"
+  },
+  {
+    "source_line": "2 cloves garlic, minced",
+    "qty": 2.0,
+    "unit": "clove",
+    "optional": false,
+    "parse_failed": false,
+    "category": "Produce",
+    "canonical_name": "garlic_raw"
+  },
+  {
+    "source_line": "2 cucumbers, halved lengthwise then sliced (or 1 long cucumber)",
+    "qty": 2.0,
+    "unit": "ea",
+    "optional": false,
+    "parse_failed": false,
+    "category": "Produce",
+    "canonical_name": "cucumber_raw"
+  },
+  {
+    "source_line": "2 cups (300 g) unbleached all-purpose flour",
+    "qty": 2.0,
+    "unit": "cup",
+    "optional": false,
+    "parse_failed": false,
+    "category": "Bakery",
+    "canonical_name": "flour_wheat_all_purpose_unenriched_unbleached"
+  },
+  {
+    "source_line": "2 cups chocolate chips (14 oz)",
+    "qty": 2.0,
+    "unit": "cup",
+    "optional": false,
+    "parse_failed": false,
+    "category": "Other",
+    "canonical_name": "chocolate_chips"
+  },
+  {
+    "source_line": "2 cups cooked white or brown rice, cooled",
+    "qty": 2.0,
+    "unit": "cup",
+    "optional": false,
+    "parse_failed": false,
+    "category": "Other",
+    "canonical_name": "cooked_white_or_brown_rice"
+  },
+  {
+    "source_line": "2 cups ice",
+    "qty": 2.0,
+    "unit": "cup",
+    "optional": false,
+    "parse_failed": false,
+    "category": "Bakery",
+    "canonical_name": "icing_white"
+  },
+  {
+    "source_line": "2 cups of beef broth",
+    "qty": 2.0,
+    "unit": "cup",
+    "optional": false,
+    "parse_failed": false,
+    "category": "Other",
+    "canonical_name": "soup_beef_broth_cubed_dry"
+  },
+  {
+    "source_line": "2 cups vegetable broth or water",
+    "qty": 2.0,
+    "unit": "cup",
+    "optional": false,
+    "parse_failed": false,
+    "category": "Other",
+    "canonical_name": "soup_swanson_vegetable_broth"
+  },
+  {
+    "source_line": "2 cups water",
+    "qty": 2.0,
+    "unit": "cup",
+    "optional": false,
+    "parse_failed": false,
+    "category": "Beverages",
+    "canonical_name": "water_tap"
+  },
+  {
+    "source_line": "2 eggs",
+    "qty": 2.0,
+    "unit": "ea",
+    "optional": false,
+    "parse_failed": false,
+    "category": "Dairy",
+    "canonical_name": "eggs_grade_a_large_egg_whole"
+  },
+  {
+    "source_line": "2 garlic cloves minced",
+    "qty": 2.0,
+    "unit": "clove",
+    "optional": false,
+    "parse_failed": false,
+    "category": "Produce",
+    "canonical_name": "garlic_raw"
+  },
+  {
+    "source_line": "2 large celery stalks, cut into 1″ pieces",
+    "qty": 2.0,
+    "unit": "large stalk",
+    "optional": false,
+    "parse_failed": false,
+    "category": "Produce",
+    "canonical_name": "celery_raw"
+  },
+  {
+    "source_line": "2 large cloves garlic, minced",
+    "qty": 2.0,
+    "unit": "large clove",
+    "optional": false,
+    "parse_failed": false,
+    "category": "Produce",
+    "canonical_name": "garlic_raw"
+  },
+  {
+    "source_line": "2 large eggs",
+    "qty": 2.0,
+    "unit": "ea",
+    "optional": false,
+    "parse_failed": false,
+    "category": "Dairy",
+    "canonical_name": "eggs_grade_a_large_egg_whole"
+  },
+  {
+    "source_line": "2 lbs chicken, cut into 2-3 inch pieces",
+    "qty": 2.0,
+    "unit": "lb",
+    "optional": false,
+    "parse_failed": false,
+    "category": "Meat",
+    "canonical_name": "chicken_ground_raw"
+  },
+  {
+    "source_line": "2 lbs chuck beef, cut into bite-size cubes",
+    "qty": 2.0,
+    "unit": "lb",
+    "optional": false,
+    "parse_failed": false,
+    "category": "Meat",
+    "canonical_name": "beef_steak_chuck"
+  },
+  {
+    "source_line": "2 lemons, juice of",
+    "qty": 2.0,
+    "unit": "ea",
+    "optional": false,
+    "parse_failed": false,
+    "category": "Produce",
+    "canonical_name": "lemon_raw"
+  },
+  {
+    "source_line": "2 medium carrots, chopped",
+    "qty": 2.0,
+    "unit": "ea",
+    "optional": false,
+    "parse_failed": false,
+    "category": "Produce",
+    "canonical_name": "carrots_raw"
+  },
+  {
+    "source_line": "2 onions, chopped",
+    "qty": 2.0,
+    "unit": "ea",
+    "optional": false,
+    "parse_failed": false,
+    "category": "Produce",
+    "canonical_name": "onions_raw"
+  },
+  {
+    "source_line": "2 puff pastries",
+    "qty": 2.0,
+    "unit": "ea",
+    "optional": false,
+    "parse_failed": false,
+    "category": "Other",
+    "canonical_name": "pastry_puff"
+  },
+  {
+    "source_line": "2 ribs celery, chopped",
+    "qty": 2.0,
+    "unit": "rib",
+    "optional": false,
+    "parse_failed": false,
+    "category": "Produce",
+    "canonical_name": "celery_raw"
+  },
+  {
+    "source_line": "2 star anise",
+    "qty": 2.0,
+    "unit": "ea",
+    "optional": false,
+    "parse_failed": false,
+    "category": "Spices",
+    "canonical_name": "spices_anise_seed"
+  },
+  {
+    "source_line": "2 tablespoons chili powder*",
+    "qty": 2.0,
+    "unit": "tbsp",
+    "optional": false,
+    "parse_failed": false,
+    "category": "Spices",
+    "canonical_name": "spices_chili_powder"
+  },
+  {
+    "source_line": "2 tablespoons chopped fresh cilantro",
+    "qty": 2.0,
+    "unit": "tbsp",
+    "optional": false,
+    "parse_failed": false,
+    "category": "Other",
+    "canonical_name": "coriander_cilantro_leaves_raw"
+  },
+  {
+    "source_line": "2 tablespoons cornstarch",
+    "qty": 2.0,
+    "unit": "tbsp",
+    "optional": false,
+    "parse_failed": false,
+    "category": "Other",
+    "canonical_name": "cornstarch"
+  },
+  {
+    "source_line": "2 tablespoons dried mint flakes",
+    "qty": 2.0,
+    "unit": "tbsp",
+    "optional": false,
+    "parse_failed": false,
+    "category": "Other",
+    "canonical_name": "spearmint_dried"
+  },
+  {
+    "source_line": "2 tablespoons dried oregano",
+    "qty": 2.0,
+    "unit": "tbsp",
+    "optional": false,
+    "parse_failed": false,
+    "category": "Spices",
+    "canonical_name": "spices_oregano_dried"
+  },
+  {
+    "source_line": "2 tablespoons extra-virgin olive oil",
+    "qty": 2.0,
+    "unit": "tbsp",
+    "optional": false,
+    "parse_failed": false,
+    "category": "Pantry",
+    "canonical_name": "oil_olive_extra_virgin"
+  },
+  {
+    "source_line": "2 tbsp coriander (cilantro) leaves, chopped",
+    "qty": 2.0,
+    "unit": "tbsp",
+    "optional": false,
+    "parse_failed": false,
+    "category": "Other",
+    "canonical_name": "coriander_cilantro_leaves_raw"
+  },
+  {
+    "source_line": "2 tbsp creamed horseradish spread",
+    "qty": 2.0,
+    "unit": "tbsp",
+    "optional": false,
+    "parse_failed": false,
+    "category": "Other",
+    "canonical_name": "creamed_horseradish_spread"
+  },
+  {
+    "source_line": "2 tbsp honey",
+    "qty": 2.0,
+    "unit": "tbsp",
+    "optional": false,
+    "parse_failed": false,
+    "category": "Pantry",
+    "canonical_name": "honey"
+  },
+  {
+    "source_line": "2 tbsp olive oil",
+    "qty": 2.0,
+    "unit": "tbsp",
+    "optional": false,
+    "parse_failed": false,
+    "category": "Pantry",
+    "canonical_name": "olive_oil"
+  },
+  {
+    "source_line": "2 tbsp olive oil, divided",
+    "qty": 2.0,
+    "unit": "tbsp",
+    "optional": false,
+    "parse_failed": false,
+    "category": "Pantry",
+    "canonical_name": "olive_oil"
+  },
+  {
+    "source_line": "2 tbsp red wine vinegar",
+    "qty": 2.0,
+    "unit": "tbsp",
+    "optional": false,
+    "parse_failed": false,
+    "category": "Pantry",
+    "canonical_name": "vinegar_red_wine"
+  },
+  {
+    "source_line": "2 tbsp tahini (or Chinese sesame paste – Note 5)",
+    "qty": 2.0,
+    "unit": "tbsp",
+    "optional": false,
+    "parse_failed": false,
+    "category": "Other",
+    "canonical_name": "tahini"
+  },
+  {
+    "source_line": "2 tbsp. canola oil, divided",
+    "qty": 2.0,
+    "unit": "tbsp",
+    "optional": false,
+    "parse_failed": false,
+    "category": "Other",
+    "canonical_name": "canola_oil"
+  },
+  {
+    "source_line": "2 teaspoons Aleppo pepper red pepper flakes",
+    "qty": 2.0,
+    "unit": "tsp",
+    "optional": false,
+    "parse_failed": false,
+    "category": "Produce",
+    "canonical_name": "peppers_red_cooked"
+  },
+  {
+    "source_line": "2 teaspoons ground cumin",
+    "qty": 2.0,
+    "unit": "tsp",
+    "optional": false,
+    "parse_failed": false,
+    "category": "Spices",
+    "canonical_name": "spices_cumin_seed"
+  },
+  {
+    "source_line": "2 teaspoons honey",
+    "qty": 2.0,
+    "unit": "tsp",
+    "optional": false,
+    "parse_failed": false,
+    "category": "Pantry",
+    "canonical_name": "honey"
+  },
+  {
+    "source_line": "2 teaspoons lemon juice",
+    "qty": 2.0,
+    "unit": "tsp",
+    "optional": false,
+    "parse_failed": false,
+    "category": "Produce",
+    "canonical_name": "lemon_juice_raw"
+  },
+  {
+    "source_line": "2 teaspoons pure vanilla extract",
+    "qty": 2.0,
+    "unit": "tsp",
+    "optional": false,
+    "parse_failed": false,
+    "category": "Spices",
+    "canonical_name": "vanilla_extract"
+  },
+  {
+    "source_line": "2 teaspoons sherry vinegar, red wine vinegar, or lime juice",
+    "qty": 2.0,
+    "unit": "tsp",
+    "optional": false,
+    "parse_failed": false,
+    "category": "Pantry",
+    "canonical_name": "vinegar_red_wine"
+  },
+  {
+    "source_line": "2 to 4 tablespoons sugar, honey, or maple syrup to taste",
+    "qty": 2.0,
+    "unit": "tbsp",
+    "optional": false,
+    "parse_failed": false,
+    "category": "Other",
+    "canonical_name": "sugar_nfs"
+  },
+  {
+    "source_line": "2 tsp coconut oil",
+    "qty": 2.0,
+    "unit": "tsp",
+    "optional": false,
+    "parse_failed": false,
+    "category": "Other",
+    "canonical_name": "coconut_oil"
+  },
+  {
+    "source_line": "2 tsp dried mixed herbs",
+    "qty": 2.0,
+    "unit": "tsp",
+    "optional": false,
+    "parse_failed": false,
+    "category": "Other",
+    "canonical_name": "dried_mixed_herbs"
+  },
+  {
+    "source_line": "2 tsp ground cumin",
+    "qty": 2.0,
+    "unit": "tsp",
+    "optional": false,
+    "parse_failed": false,
+    "category": "Spices",
+    "canonical_name": "spices_cumin_seed"
+  },
+  {
+    "source_line": "2 yellow onions, chopped",
+    "qty": 2.0,
+    "unit": "ea",
+    "optional": false,
+    "parse_failed": false,
+    "category": "Produce",
+    "canonical_name": "onions_yellow_raw"
+  },
+  {
+    "source_line": "2-3 large tomatoes, chopped",
+    "qty": 2.0,
+    "unit": "ea",
+    "optional": false,
+    "parse_failed": false,
+    "category": "Produce",
+    "canonical_name": "tomatoes_raw"
+  },
+  {
+    "source_line": "2.5 lb beef chuck , boneless short rib or any other slow cooking beef, cut into 2″ chunks",
+    "qty": 2.5,
+    "unit": "lb",
+    "optional": false,
+    "parse_failed": false,
+    "category": "Meat",
+    "canonical_name": "beef_steak_chuck"
+  },
+  {
+    "source_line": "2.5 tbsp cider vinegar",
+    "qty": 2.5,
+    "unit": "tbsp",
+    "optional": false,
+    "parse_failed": false,
+    "category": "Pantry",
+    "canonical_name": "vinegar_cider"
+  },
+  {
+    "source_line": "2/3 cup dark chocolate chips",
+    "qty": 0.67,
+    "unit": "cup",
+    "optional": false,
+    "parse_failed": false,
+    "category": "Other",
+    "canonical_name": "chocolate_chips"
+  },
+  {
+    "source_line": "2/3 cup shaoxing wine",
+    "qty": 0.67,
+    "unit": "cup",
+    "optional": false,
+    "parse_failed": false,
+    "category": "Other",
+    "canonical_name": "wine_rice"
+  },
+  {
+    "source_line": "2/3 cup water",
+    "qty": 0.67,
+    "unit": "cup",
+    "optional": false,
+    "parse_failed": false,
+    "category": "Beverages",
+    "canonical_name": "water_tap"
+  },
+  {
+    "source_line": "20 beef meatballs",
+    "qty": 20.0,
+    "unit": "ea",
+    "optional": false,
+    "parse_failed": false,
+    "category": "Meat",
+    "canonical_name": "meatballs_meatless"
+  },
+  {
+    "source_line": "250g paneer, cubed",
+    "qty": 250.0,
+    "unit": "g",
+    "optional": false,
+    "parse_failed": false,
+    "category": "Dairy",
+    "canonical_name": "cheese_paneer"
+  },
+  {
+    "source_line": "250g seasoned spinach",
+    "qty": 250.0,
+    "unit": "g",
+    "optional": false,
+    "parse_failed": false,
+    "category": "Produce",
+    "canonical_name": "spinach_raw"
+  },
+  {
+    "source_line": "3 Tablespoons olive oil",
+    "qty": 3.0,
+    "unit": "tbsp",
+    "optional": false,
+    "parse_failed": false,
+    "category": "Pantry",
+    "canonical_name": "olive_oil"
+  },
+  {
+    "source_line": "3 carrots, peeled and cut into 1/2″ thick pieces",
+    "qty": 3.0,
+    "unit": "ea",
+    "optional": false,
+    "parse_failed": false,
+    "category": "Produce",
+    "canonical_name": "carrots_raw"
+  },
+  {
+    "source_line": "3 cloves",
+    "qty": 3.0,
+    "unit": "ea",
+    "optional": false,
+    "parse_failed": false,
+    "category": "Produce",
+    "canonical_name": "garlic_raw"
+  },
+  {
+    "source_line": "3 cloves garlic",
+    "qty": 3.0,
+    "unit": "clove",
+    "optional": false,
+    "parse_failed": false,
+    "category": "Produce",
+    "canonical_name": "garlic_raw"
+  },
+  {
+    "source_line": "3 cups all-purpose flour",
+    "qty": 3.0,
+    "unit": "cup",
+    "optional": false,
+    "parse_failed": false,
+    "category": "Bakery",
+    "canonical_name": "flour_wheat_all_purpose_unenriched_unbleached"
+  },
+  {
+    "source_line": "3 cups chicken beef stock broth",
+    "qty": 3.0,
+    "unit": "cup",
+    "optional": false,
+    "parse_failed": false,
+    "category": "Other",
+    "canonical_name": "soup_chicken_broth_or_bouillon_dry"
+  },
+  {
+    "source_line": "3 cups store‑bought roast chicken, shredded",
+    "qty": 3.0,
+    "unit": "cup",
+    "optional": false,
+    "parse_failed": false,
+    "category": "Meat",
+    "canonical_name": "chicken_roasting_meat_only_cooked_roasted"
+  },
+  {
+    "source_line": "3 garlic cloves, chopped",
+    "qty": 3.0,
+    "unit": "clove",
+    "optional": false,
+    "parse_failed": false,
+    "category": "Produce",
+    "canonical_name": "garlic_raw"
+  },
+  {
+    "source_line": "3 garlic cloves, minced",
+    "qty": 3.0,
+    "unit": "clove",
+    "optional": false,
+    "parse_failed": false,
+    "category": "Produce",
+    "canonical_name": "garlic_raw"
+  },
+  {
+    "source_line": "3 lbs green leafy vegetable",
+    "qty": 3.0,
+    "unit": "lb",
+    "optional": false,
+    "parse_failed": false,
+    "category": "Other",
+    "canonical_name": "cowpeas_leafy_tips_raw"
+  },
+  {
+    "source_line": "3 or 4 eggs",
+    "qty": 3.0,
+    "unit": "ea",
+    "optional": false,
+    "parse_failed": false,
+    "category": "Dairy",
+    "canonical_name": "eggs_grade_a_large_egg_whole"
+  },
+  {
+    "source_line": "3 packages dumpling wrappers",
+    "qty": 3.0,
+    "unit": "package",
+    "optional": false,
+    "parse_failed": false,
+    "category": "Other",
+    "canonical_name": "wonton_wrappers_includes_egg_roll_wrappers"
+  },
+  {
+    "source_line": "3 pieces dried bay leaves (dahon ng laurel)",
+    "qty": 3.0,
+    "unit": "ea",
+    "optional": false,
+    "parse_failed": false,
+    "category": "Spices",
+    "canonical_name": "spices_bay_leaf"
+  },
+  {
+    "source_line": "3 sprigs fresh thyme (or 1 teaspoon dried thyme)",
+    "qty": 3.0,
+    "unit": "sprig",
+    "optional": false,
+    "parse_failed": false,
+    "category": "Other",
+    "canonical_name": "thyme_fresh"
+  },
+  {
+    "source_line": "3 sprigs thyme (or 1 tsp dried thyme)",
+    "qty": 3.0,
+    "unit": "sprig",
+    "optional": false,
+    "parse_failed": false,
+    "category": "Other",
+    "canonical_name": "thyme_fresh"
+  },
+  {
+    "source_line": "3 tablespoons butter",
+    "qty": 3.0,
+    "unit": "tbsp",
+    "optional": false,
+    "parse_failed": false,
+    "category": "Dairy",
+    "canonical_name": "butter_stick_unsalted"
+  },
+  {
+    "source_line": "3 tablespoons cooking oil",
+    "qty": 3.0,
+    "unit": "tbsp",
+    "optional": false,
+    "parse_failed": false,
+    "category": "Produce",
+    "canonical_name": "plantain_cooked_with_oil"
+  },
+  {
+    "source_line": "3 tablespoons extra virgin olive oil",
+    "qty": 3.0,
+    "unit": "tbsp",
+    "optional": false,
+    "parse_failed": false,
+    "category": "Pantry",
+    "canonical_name": "oil_olive_extra_virgin"
+  },
+  {
+    "source_line": "3 tablespoons flour",
+    "qty": 3.0,
+    "unit": "tbsp",
+    "optional": false,
+    "parse_failed": false,
+    "category": "Bakery",
+    "canonical_name": "flour_00"
+  },
+  {
+    "source_line": "3 tablespoons sesame oil",
+    "qty": 3.0,
+    "unit": "tbsp",
+    "optional": false,
+    "parse_failed": false,
+    "category": "Other",
+    "canonical_name": "sesame_oil"
+  },
+  {
+    "source_line": "3 tablespoons soy sauce",
+    "qty": 3.0,
+    "unit": "tbsp",
+    "optional": false,
+    "parse_failed": false,
+    "category": "Sauces",
+    "canonical_name": "soy_sauce"
+  },
+  {
+    "source_line": "3 tbsp flour",
+    "qty": 3.0,
+    "unit": "tbsp",
+    "optional": false,
+    "parse_failed": false,
+    "category": "Bakery",
+    "canonical_name": "flour_00"
+  },
+  {
+    "source_line": "3 to 4 cups vegetable broth, as needed",
+    "qty": 3.0,
+    "unit": "cup",
+    "optional": false,
+    "parse_failed": false,
+    "category": "Other",
+    "canonical_name": "soup_swanson_vegetable_broth"
+  },
+  {
+    "source_line": "3 to 4 serving portions of steamed rice",
+    "qty": 3.0,
+    "unit": "ea",
+    "optional": false,
+    "parse_failed": false,
+    "category": "Other",
+    "canonical_name": "serving_portions_of_steamed_rice"
+  },
+  {
+    "source_line": "3 tsp ground coriander",
+    "qty": 3.0,
+    "unit": "tsp",
+    "optional": false,
+    "parse_failed": false,
+    "category": "Other",
+    "canonical_name": "ground_coriander"
+  },
+  {
+    "source_line": "3 tsp ground cumin",
+    "qty": 3.0,
+    "unit": "tsp",
+    "optional": false,
+    "parse_failed": false,
+    "category": "Spices",
+    "canonical_name": "spices_cumin_seed"
+  },
+  {
+    "source_line": "3/4 tsp each salt and black pepper",
+    "qty": 0.75,
+    "unit": "tsp",
+    "optional": false,
+    "parse_failed": false,
+    "category": "Spices",
+    "canonical_name": "salt_table_iodized"
+  },
+  {
+    "source_line": "3/4 tsp ground allspice",
+    "qty": 0.75,
+    "unit": "tsp",
+    "optional": false,
+    "parse_failed": false,
+    "category": "Spices",
+    "canonical_name": "spices_allspice_ground"
+  },
+  {
+    "source_line": "300 g/10 oz cherry grape tomatoes (or 2 normal tomatoes, chopped)",
+    "qty": 300.0,
+    "unit": "g",
+    "optional": false,
+    "parse_failed": false,
+    "category": "Produce",
+    "canonical_name": "tomatoes_grape_raw"
+  },
+  {
+    "source_line": "350g seasoned bean sprouts",
+    "qty": 350.0,
+    "unit": "g",
+    "optional": false,
+    "parse_failed": false,
+    "category": "Other",
+    "canonical_name": "bean_sprouts_raw"
+  },
+  {
+    "source_line": "397g extra firm tofu",
+    "qty": 397.0,
+    "unit": "g",
+    "optional": false,
+    "parse_failed": false,
+    "category": "Pantry",
+    "canonical_name": "tofu_extra_firm_prepared_with_nigari"
+  },
+  {
+    "source_line": "4 black peppercorns",
+    "qty": 4.0,
+    "unit": "ea",
+    "optional": false,
+    "parse_failed": false,
+    "category": "Other",
+    "canonical_name": "black_peppercorns"
+  },
+  {
+    "source_line": "4 cloves garlic, minced",
+    "qty": 4.0,
+    "unit": "clove",
+    "optional": false,
+    "parse_failed": false,
+    "category": "Produce",
+    "canonical_name": "garlic_raw"
+  },
+  {
+    "source_line": "4 cloves garlic, pressed or minced",
+    "qty": 4.0,
+    "unit": "clove",
+    "optional": false,
+    "parse_failed": false,
+    "category": "Produce",
+    "canonical_name": "garlic_raw"
+  },
+  {
+    "source_line": "4 garlic cloves",
+    "qty": 4.0,
+    "unit": "clove",
+    "optional": false,
+    "parse_failed": false,
+    "category": "Produce",
+    "canonical_name": "garlic_raw"
+  },
+  {
+    "source_line": "4 ounces cream cheese, room temperature",
+    "qty": 4.0,
+    "unit": "oz",
+    "optional": false,
+    "parse_failed": false,
+    "category": "Dairy",
+    "canonical_name": "cheese_cream"
+  },
+  {
+    "source_line": "4 oz. Monterey Jack cheese, shredded",
+    "qty": 4.0,
+    "unit": "oz",
+    "optional": false,
+    "parse_failed": false,
+    "category": "Dairy",
+    "canonical_name": "cheese_monterey_jack_solid"
+  },
+  {
+    "source_line": "4 oz. sharp cheddar cheese, shredded",
+    "qty": 4.0,
+    "unit": "oz",
+    "optional": false,
+    "parse_failed": false,
+    "category": "Dairy",
+    "canonical_name": "cheese_cheddar_sharp_sliced"
+  },
+  {
+    "source_line": "4 pounds yellow onions, peeled and thinly sliced (approximately 5–6 large onions)",
+    "qty": 4.0,
+    "unit": "lb",
+    "optional": false,
+    "parse_failed": false,
+    "category": "Produce",
+    "canonical_name": "onions_yellow_raw"
+  },
+  {
+    "source_line": "4 tablespoons white vinegar (note 4)",
+    "qty": 4.0,
+    "unit": "tbsp",
+    "optional": false,
+    "parse_failed": false,
+    "category": "Pantry",
+    "canonical_name": "vinegar_distilled"
+  },
+  {
+    "source_line": "4 tbsp cream",
+    "qty": 4.0,
+    "unit": "tbsp",
+    "optional": false,
+    "parse_failed": false,
+    "category": "Dairy",
+    "canonical_name": "cream_whipped"
+  },
+  {
+    "source_line": "4 tbsp tomato paste",
+    "qty": 4.0,
+    "unit": "tbsp",
+    "optional": false,
+    "parse_failed": false,
+    "category": "Produce",
+    "canonical_name": "tomato_paste_canned_without_salt_added"
+  },
+  {
+    "source_line": "5 Cloves",
+    "qty": 5.0,
+    "unit": "ea",
+    "optional": false,
+    "parse_failed": false,
+    "category": "Produce",
+    "canonical_name": "garlic_raw"
+  },
+  {
+    "source_line": "5 Egg Yolks",
+    "qty": 5.0,
+    "unit": "ea",
+    "optional": false,
+    "parse_failed": false,
+    "category": "Dairy",
+    "canonical_name": "egg_yolk_only_raw"
+  },
+  {
+    "source_line": "5 Mini Pumpkins",
+    "qty": 5.0,
+    "unit": "ea",
+    "optional": false,
+    "parse_failed": false,
+    "category": "Other",
+    "canonical_name": "pumpkin_raw"
+  },
+  {
+    "source_line": "5 cloves garlic",
+    "qty": 5.0,
+    "unit": "clove",
+    "optional": false,
+    "parse_failed": false,
+    "category": "Produce",
+    "canonical_name": "garlic_raw"
+  },
+  {
+    "source_line": "5 garlic cloves, peeled and sliced; more for later",
+    "qty": 5.0,
+    "unit": "clove",
+    "optional": false,
+    "parse_failed": false,
+    "category": "Produce",
+    "canonical_name": "garlic_raw"
+  },
+  {
+    "source_line": "5 lbs Yukon Gold Russet potatoes",
+    "qty": 5.0,
+    "unit": "lb",
+    "optional": false,
+    "parse_failed": false,
+    "category": "Produce",
+    "canonical_name": "potatoes_gold_without_skin_raw"
+  },
+  {
+    "source_line": "5-6 limes peeled or juiced or whole. you can also use lemons",
+    "qty": 5.0,
+    "unit": "ea",
+    "optional": false,
+    "parse_failed": false,
+    "category": "Produce",
+    "canonical_name": "limes_raw"
+  },
+  {
+    "source_line": "5-7 green cardamom pods",
+    "qty": 5.0,
+    "unit": "ea",
+    "optional": false,
+    "parse_failed": false,
+    "category": "Other",
+    "canonical_name": "peas_edible_podded_raw"
+  },
+  {
+    "source_line": "500 ground meat",
+    "qty": 500.0,
+    "unit": "ea",
+    "optional": false,
+    "parse_failed": false,
+    "category": "Other",
+    "canonical_name": "meat_ground_nfs"
+  },
+  {
+    "source_line": "6 cups of beef stock (or veggie stock)",
+    "qty": 6.0,
+    "unit": "cup",
+    "optional": false,
+    "parse_failed": false,
+    "category": "Other",
+    "canonical_name": "soup_stock_beef_home_prepared"
+  },
+  {
+    "source_line": "6 cups water",
+    "qty": 6.0,
+    "unit": "cup",
+    "optional": false,
+    "parse_failed": false,
+    "category": "Beverages",
+    "canonical_name": "water_tap"
+  },
+  {
+    "source_line": "6 cups water add more if needed",
+    "qty": 6.0,
+    "unit": "cup",
+    "optional": false,
+    "parse_failed": false,
+    "category": "Beverages",
+    "canonical_name": "water_tap"
+  },
+  {
+    "source_line": "6 garlic cloves, chopped",
+    "qty": 6.0,
+    "unit": "clove",
+    "optional": false,
+    "parse_failed": false,
+    "category": "Produce",
+    "canonical_name": "garlic_raw"
+  },
+  {
+    "source_line": "6 tablespoons butter",
+    "qty": 6.0,
+    "unit": "tbsp",
+    "optional": false,
+    "parse_failed": false,
+    "category": "Dairy",
+    "canonical_name": "butter_stick_unsalted"
+  },
+  {
+    "source_line": "6 tablespoons soy sauce (preferably Filipino)",
+    "qty": 6.0,
+    "unit": "tbsp",
+    "optional": false,
+    "parse_failed": false,
+    "category": "Sauces",
+    "canonical_name": "soy_sauce"
+  },
+  {
+    "source_line": "6 tbsp extra‑virgin olive oil",
+    "qty": 6.0,
+    "unit": "tbsp",
+    "optional": false,
+    "parse_failed": false,
+    "category": "Pantry",
+    "canonical_name": "olive_oil"
+  },
+  {
+    "source_line": "8 (10\") flour tortillas",
+    "qty": 8.0,
+    "unit": "ea",
+    "optional": false,
+    "parse_failed": false,
+    "category": "Other",
+    "canonical_name": "tortilla_flour"
+  },
+  {
+    "source_line": "8 gold potatoes, peeled and cut into wedges",
+    "qty": 8.0,
+    "unit": "ea",
+    "optional": false,
+    "parse_failed": false,
+    "category": "Produce",
+    "canonical_name": "potatoes_gold_without_skin_raw"
+  },
+  {
+    "source_line": "8 ounces sliced mushrooms",
+    "qty": 8.0,
+    "unit": "oz",
+    "optional": false,
+    "parse_failed": false,
+    "category": "Produce",
+    "canonical_name": "mushrooms_raw"
+  },
+  {
+    "source_line": "8 slices white cheddar cheese",
+    "qty": 8.0,
+    "unit": "slice",
+    "optional": false,
+    "parse_failed": false,
+    "category": "Dairy",
+    "canonical_name": "cheese_cheddar"
+  },
+  {
+    "source_line": "8 whole cloves",
+    "qty": 8.0,
+    "unit": "ea",
+    "optional": false,
+    "parse_failed": false,
+    "category": "Spices",
+    "canonical_name": "spices_cloves_ground"
+  },
+  {
+    "source_line": "Carrots, chopped (optional)",
+    "qty": 0.0,
+    "unit": "ea",
+    "optional": true,
+    "parse_failed": false,
+    "category": "Produce",
+    "canonical_name": "carrots_raw"
+  },
+  {
+    "source_line": "Cooking oil",
+    "qty": 0.0,
+    "unit": "ea",
+    "optional": true,
+    "parse_failed": false,
+    "category": "Produce",
+    "canonical_name": "plantain_cooked_with_oil"
+  },
+  {
+    "source_line": "Extra virgin olive oil",
+    "qty": 0.0,
+    "unit": "ea",
+    "optional": true,
+    "parse_failed": false,
+    "category": "Pantry",
+    "canonical_name": "oil_olive_extra_virgin"
+  },
+  {
+    "source_line": "Fresh parsley for garnish, optional",
+    "qty": 0.0,
+    "unit": "ea",
+    "optional": true,
+    "parse_failed": false,
+    "category": "Produce",
+    "canonical_name": "parsley_fresh"
+  },
+  {
+    "source_line": "Freshly ground black pepper",
+    "qty": 0.0,
+    "unit": "ea",
+    "optional": true,
+    "parse_failed": false,
+    "category": "Spices",
+    "canonical_name": "spices_pepper_black"
+  },
+  {
+    "source_line": "Freshly ground black pepper, to taste",
+    "qty": 0.0,
+    "unit": "ea",
+    "optional": true,
+    "parse_failed": false,
+    "category": "Spices",
+    "canonical_name": "spices_pepper_black"
+  },
+  {
+    "source_line": "Meat and cheese",
+    "qty": 0.0,
+    "unit": "ea",
+    "optional": true,
+    "parse_failed": false,
+    "category": "Dairy",
+    "canonical_name": "cheese_tilsit"
+  },
+  {
+    "source_line": "Nutmeg (optional)",
+    "qty": 0.0,
+    "unit": "ea",
+    "optional": true,
+    "parse_failed": false,
+    "category": "Pantry",
+    "canonical_name": "oil_nutmeg_butter"
+  },
+  {
+    "source_line": "Pinch red pepper flakes, optional",
+    "qty": 1.0,
+    "unit": "pinch",
+    "optional": true,
+    "parse_failed": false,
+    "category": "Produce",
+    "canonical_name": "peppers_sweet_red_raw"
+  },
+  {
+    "source_line": "Pinch salt",
+    "qty": 1.0,
+    "unit": "pinch",
+    "optional": false,
+    "parse_failed": false,
+    "category": "Spices",
+    "canonical_name": "salt_table_iodized"
+  },
+  {
+    "source_line": "Saffron (optional)",
+    "qty": 0.0,
+    "unit": "ea",
+    "optional": true,
+    "parse_failed": false,
+    "category": "Spices",
+    "canonical_name": "spices_saffron"
+  },
+  {
+    "source_line": "Salt and pepper",
+    "qty": 0.0,
+    "unit": "ea",
+    "optional": true,
+    "parse_failed": false,
+    "category": "Spices",
+    "canonical_name": "salt_table_iodized"
+  },
+  {
+    "source_line": "Salt and pepper to taste",
+    "qty": 0.0,
+    "unit": "ea",
+    "optional": true,
+    "parse_failed": false,
+    "category": "Spices",
+    "canonical_name": "salt_table_iodized"
+  },
+  {
+    "source_line": "Sesame seeds",
+    "qty": 0.0,
+    "unit": "ea",
+    "optional": true,
+    "parse_failed": false,
+    "category": "Other",
+    "canonical_name": "sesame_seeds"
+  },
+  {
+    "source_line": "Some toasted seasoned seaweed, shredded (long thin cut)",
+    "qty": 0.0,
+    "unit": "ea",
+    "optional": true,
+    "parse_failed": false,
+    "category": "Pantry",
+    "canonical_name": "seaweed_dried"
+  },
+  {
+    "source_line": "Thyme",
+    "qty": 0.0,
+    "unit": "ea",
+    "optional": true,
+    "parse_failed": false,
+    "category": "Other",
+    "canonical_name": "thyme_fresh"
+  },
+  {
+    "source_line": "baguette",
+    "qty": 0.0,
+    "unit": "ea",
+    "optional": true,
+    "parse_failed": false,
+    "category": "Meat",
+    "canonical_name": "beef_sandwich_steaks_flaked_chopped_formed_and_thinly_sliced_raw"
+  },
+  {
+    "source_line": "basilc",
+    "qty": 0.0,
+    "unit": "ea",
+    "optional": true,
+    "parse_failed": false,
+    "category": "Other",
+    "canonical_name": "basilc"
+  },
+  {
+    "source_line": "burrata",
+    "qty": 0.0,
+    "unit": "ea",
+    "optional": true,
+    "parse_failed": false,
+    "category": "Other",
+    "canonical_name": "burrata"
+  },
+  {
+    "source_line": "fine sea salt",
+    "qty": 0.0,
+    "unit": "ea",
+    "optional": true,
+    "parse_failed": false,
+    "category": "Other",
+    "canonical_name": "fine_sea_salt"
+  },
+  {
+    "source_line": "fine sea salt and freshly-cracked black pepper, to taste",
+    "qty": 0.0,
+    "unit": "ea",
+    "optional": true,
+    "parse_failed": false,
+    "category": "Spices",
+    "canonical_name": "spices_pepper_black"
+  },
+  {
+    "source_line": "fresh peppermint",
+    "qty": 0.0,
+    "unit": "ea",
+    "optional": true,
+    "parse_failed": false,
+    "category": "Spices",
+    "canonical_name": "peppermint_fresh"
+  },
+  {
+    "source_line": "grated or sliced cheese (such as Gruyere, Asiago, Swiss, Gouda or Mozzarella)",
+    "qty": 0.0,
+    "unit": "ea",
+    "optional": false,
+    "parse_failed": true,
+    "category": "Dairy",
+    "canonical_name": "cheese_tilsit"
+  },
+  {
+    "source_line": "huile d’olive",
+    "qty": 0.0,
+    "unit": "ea",
+    "optional": true,
+    "parse_failed": false,
+    "category": "Other",
+    "canonical_name": "huile_d_olive"
+  },
+  {
+    "source_line": "jaune d’oeuf",
+    "qty": 0.0,
+    "unit": "ea",
+    "optional": true,
+    "parse_failed": false,
+    "category": "Other",
+    "canonical_name": "jaune_d_oeuf"
+  },
+  {
+    "source_line": "lime zest",
+    "qty": 0.0,
+    "unit": "ea",
+    "optional": true,
+    "parse_failed": false,
+    "category": "Produce",
+    "canonical_name": "limes_raw"
+  },
+  {
+    "source_line": "miel",
+    "qty": 0.0,
+    "unit": "ea",
+    "optional": true,
+    "parse_failed": false,
+    "category": "Other",
+    "canonical_name": "miel"
+  },
+  {
+    "source_line": "oignons confits",
+    "qty": 0.0,
+    "unit": "ea",
+    "optional": true,
+    "parse_failed": false,
+    "category": "Other",
+    "canonical_name": "oignons_confits"
+  },
+  {
+    "source_line": "pignons",
+    "qty": 0.0,
+    "unit": "ea",
+    "optional": true,
+    "parse_failed": false,
+    "category": "Other",
+    "canonical_name": "pignons"
+  },
+  {
+    "source_line": "pinch of sea salt",
+    "qty": 1.0,
+    "unit": "pinch",
+    "optional": false,
+    "parse_failed": false,
+    "category": "Spices",
+    "canonical_name": "salt_table_iodized"
+  },
+  {
+    "source_line": "poivre",
+    "qty": 0.0,
+    "unit": "ea",
+    "optional": true,
+    "parse_failed": false,
+    "category": "Other",
+    "canonical_name": "poivre"
+  },
+  {
+    "source_line": "pâte brisée",
+    "qty": 0.0,
+    "unit": "ea",
+    "optional": true,
+    "parse_failed": false,
+    "category": "Other",
+    "canonical_name": "p_te_bris_e"
+  },
+  {
+    "source_line": "sel",
+    "qty": 0.0,
+    "unit": "ea",
+    "optional": true,
+    "parse_failed": false,
+    "category": "Other",
+    "canonical_name": "sel"
+  },
+  {
+    "source_line": "sliced limes",
+    "qty": 0.0,
+    "unit": "ea",
+    "optional": true,
+    "parse_failed": false,
+    "category": "Produce",
+    "canonical_name": "limes_raw"
+  },
+  {
+    "source_line": "tomates et tomates cerises",
+    "qty": 0.0,
+    "unit": "ea",
+    "optional": true,
+    "parse_failed": false,
+    "category": "Other",
+    "canonical_name": "tomates_et_tomates_cerises"
+  },
+  {
+    "source_line": "vinaigre balsamique",
+    "qty": 0.0,
+    "unit": "ea",
+    "optional": true,
+    "parse_failed": false,
+    "category": "Other",
+    "canonical_name": "vinaigre_balsamique"
+  }
+]
