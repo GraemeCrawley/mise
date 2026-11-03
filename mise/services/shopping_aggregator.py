@@ -65,9 +65,25 @@ def _dimension(unit: str) -> Dimension:
     return "count"
 
 
+_GLYPHS = ((0.25, "¼"), (0.5, "½"), (0.75, "¾"), (1 / 3, "⅓"), (2 / 3, "⅔"), (0.125, "⅛"))
+
+
 def _fmt(q: float) -> str:
     q = round(q, 2)
-    return str(int(q)) if abs(q - round(q)) < 0.05 else str(q)
+    if abs(q - round(q)) < 0.05:
+        return str(int(round(q)))
+    whole, frac = int(q), q - int(q)
+    for f, g in _GLYPHS:
+        if abs(frac - f) < 0.015:
+            return (str(whole) if whole else "") + g
+    return str(q)
+
+
+def _part(q: float, u: str, mixed: bool = False) -> str:
+    # Counts are stored as "ea": show "2" alone, "2 whole + 1 cup" mixed.
+    if u == "ea":
+        return f"{_fmt(q)} whole" if mixed else _fmt(q)
+    return f"{_fmt(q)} {u}"
 
 
 def _display_line(canonical: str, occ: list[tuple[float, str]]) -> str:
@@ -91,12 +107,12 @@ def _display_line(canonical: str, occ: list[tuple[float, str]]) -> str:
             buy_unit = BUY_UNITS[canonical]["buy_unit"]
             q2, u2 = rollup(canonical, total, buy_unit)
             prefix = "~" if u2 != buy_unit else ""
-            return f"{prefix}{_fmt(q2)} {u2}"
+            return prefix + _part(q2, u2)
     # Rules 2 & 3: group by dimension; sum compatible, show parts otherwise.
     dims: dict[str, list[tuple[float, str]]] = {}
     for q, u in occ:
         dims.setdefault(_dimension(u), []).append((q, u))
-    parts: list[str] = []
+    parts: list[tuple[float, str]] = []
     for dim, lst in dims.items():
         if dim in ("mass", "volume"):
             target = max(
@@ -109,13 +125,13 @@ def _display_line(canonical: str, occ: list[tuple[float, str]]) -> str:
                     tot += (q * _ureg(u)).to(target).magnitude
                 except Exception:
                     tot += q
-            parts.append(f"{_fmt(tot)} {target}")
+            parts.append((tot, target))
         else:
             byu: dict[str, float] = {}
             for q, u in lst:
                 byu[u] = byu.get(u, 0.0) + q
-            parts += [f"{_fmt(q)} {u}" for u, q in byu.items()]
-    return " + ".join(parts)
+            parts += [(q, u) for u, q in byu.items()]
+    return " + ".join(_part(q, u, len(parts) > 1) for q, u in parts)
 
 
 # Known canonical synonyms that the LLM verify pass produced

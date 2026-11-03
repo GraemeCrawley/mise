@@ -519,7 +519,7 @@ def test_shop_by_recipe_view(client, session: Session, household: Household) -> 
     # apple is shared: one key, shown under both, each with its own amount.
     assert page.count("data-key='apple|ea'") == 2
     assert "also for Soup B" in page and "also for Soup A" in page
-    assert ">1 ea</span>" in page and ">2 ea</span>" in page
+    assert ">1</span>" in page and ">2</span>" in page
     # Default view still groups by aisle with the aggregate (3 ea).
     agg = client.get("/app/shop").text
     assert agg.count("data-key='apple|ea'") == 1 and "id='shop-view'" in agg
@@ -549,7 +549,7 @@ def test_check_off_whole_recipe(client, session: Session, household: Household) 
     page = client.get("/app/shop").text
     # Soup A's lines drop out; the shared apple shrinks to Soup B's 2 ea.
     assert "data-key='milk|ea'" not in page
-    assert ">2 ea<" in page and ">3 ea<" not in page
+    assert ">2<" in page and ">3<" not in page
     # Its chip stays, ticked, so it can be unticked.
     assert f"data-recipe='{a.id}' data-shopped='1'" in page
     assert f"data-recipe='{b.id}' data-shopped='0'" in page

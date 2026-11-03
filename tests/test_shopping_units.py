@@ -45,10 +45,10 @@ def test_tofu_grams_plus_block():
     assert _display_line("tofu", [(200, "g"), (1, "block")]) == "600 g"
 
 def test_milk_cup_plus_tbsp_compatible():
-    assert _display_line("milk", [(1, "cup"), (2, "tbsp")]).startswith("1.1")
+    assert _display_line("milk", [(1, "cup"), (2, "tbsp")]).startswith("1⅛")
 
 def test_flour_incompatible_shows_parts():
     assert _display_line("flour", [(2, "cup"), (250, "g")]) == "2 cup + 250 g"
 
 def test_onion_ea_plus_cup():
-    assert _display_line("onion", [(1, "ea"), (1, "cup")]) == "2 ea"
+    assert _display_line("onion", [(1, "ea"), (1, "cup")]) == "2"

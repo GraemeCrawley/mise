@@ -92,7 +92,7 @@ def test_aggregate_shows_parts_for_unbridgeable_dimensions(session: Session) -> 
     # canonical normalized: 'wonton_wrappers' → 'wonton_wrapper'
     entries = [it for it in items if it.canonical_name == "wonton_wrapper"]
     assert len(entries) == 1
-    assert entries[0].display_qty == "2 ea + 1 cup"
+    assert entries[0].display_qty == "2 whole + 1 cup"
 
 
 def test_known_solid_volume_converts_to_count(session: Session) -> None:
@@ -233,7 +233,7 @@ def test_aggregate_merges_mass_and_count_solids(session: Session) -> None:
     # natural units. ea (count) + lb (mass) don't convert → rule 3 shows parts
     # in ONE combined line.
     assert len(onions) == 1
-    assert onions[0].display_qty == "9 ea + 4 lb"
+    assert onions[0].display_qty == "9 whole + 4 lb"
 
 
 def test_aggregate_merges_length_and_count_cinnamon(session: Session) -> None:
@@ -259,7 +259,7 @@ def test_aggregate_merges_length_and_count_cinnamon(session: Session) -> None:
     items = aggregate([r1.id, r2.id], session)
     sticks = [it for it in items if it.canonical_name == "cinnamon_stick"]
     assert len(sticks) == 1
-    assert sticks[0].display_qty == "4 ea + 1 inch"
+    assert sticks[0].display_qty == "4 whole + 1 inch"
 
 
 def test_pod_and_clove_share_dimension(session: Session) -> None:

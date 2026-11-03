@@ -211,6 +211,12 @@ def _fmt_qty(q: float | int | None) -> str:
     return f"{qf:g}"
 
 
+def _qty_text(q, unit: str | None) -> str:
+    """'2 cup', or just '2' for counts ("ea" is storage, not something to show)."""
+    u = "" if (unit or "") == "ea" else (unit or "")
+    return f"{_fmt_qty(q)} {u}".strip()
+
+
 def _step_html(text: str, ingredients: list[tuple]) -> str:
     """Escaped step text with a hidden "(qty unit, prep)" after each ingredient
     mention; cook mode reveals them. The inner spans are `.ing-qty` so the
@@ -1096,8 +1102,8 @@ def recipe_page(recipe_id: int, db: Session = Depends(get_session)) -> HTMLRespo
                 # nodes and multiplies by the new factor in place.
                 qty = (
                     f"<span class='font-medium text-stone-900 ing-qty' "
-                    f"data-qty='{i.qty or 0}' data-unit='{_h(i.unit or '')}'>"
-                    f"{_fmt_qty(i.qty)} {_h(i.unit or '')}"
+                    f"data-qty='{i.qty or 0}' data-unit='{_h('' if i.unit == 'ea' else (i.unit or ''))}'>"
+                    f"{_h(_qty_text(i.qty, i.unit))}"
                     f"</span> "
                 )
             prep = f", {_h(i.prep_note)}" if i.prep_note else ""
@@ -2358,7 +2364,7 @@ def plan_page(
                 slot_rows.append(
                     f"<div class='slot-note flex items-center gap-3 px-5 py-2 border-b border-stone-100 last:border-0'>"
                     f"  <div class='shrink-0 w-10 h-10 rounded-lg bg-stone-100 flex items-center justify-center text-lg'>📝</div>"
-                    f"  <span class='text-[10px] uppercase tracking-[0.15em] text-stone-400 w-12 font-semibold shrink-0'>{_h(s.meal)}</span>"
+                    f"  <span class='uppercase text-stone-400 font-semibold shrink-0' style='font-size:10px;letter-spacing:0.1em;width:4.25rem;white-space:nowrap;'>{_h(s.meal)}</span>"
                     f"  <div class='flex-1 min-w-0'><span class='serif text-lg font-medium'>{_h(s.note)}</span></div>"
                     f"  <button type='button' class='note-del text-stone-300 hover:text-rose-600 px-2 text-xl leading-none shrink-0' "
                     f"data-date='{s.date.isoformat()}' data-meal='{s.meal}' data-text='{_h(s.note)}' aria-label='Remove'>×</button>"
@@ -2421,7 +2427,7 @@ def plan_page(
                     f"data-date='{s.date.isoformat()}' data-meal='{s.meal}' "
                     f"data-recipe-id='{s.recipe_id}' data-recipe-name='{_h(s.recipe_name)}'>"
                     f"  {thumb}"
-                    f"  <span class='text-[10px] uppercase tracking-[0.15em] text-stone-400 w-12 font-semibold shrink-0'>{_h(s.meal)}</span>"
+                    f"  <span class='uppercase text-stone-400 font-semibold shrink-0' style='font-size:10px;letter-spacing:0.1em;width:4.25rem;white-space:nowrap;'>{_h(s.meal)}</span>"
                     f"  <div class='flex-1 min-w-0'>{cell}</div>"
                     f"  {actions}"
                     f"</div>"
@@ -2446,7 +2452,7 @@ def plan_page(
                         f"<button type='button' class='slot-add w-full flex items-center gap-3 px-5 py-2 border-b border-stone-100 last:border-0 drop-target text-left' "
                         f"data-empty='1' data-date='{s.date.isoformat()}' data-meal='{s.meal}'>"
                         f"  {thumb}"
-                        f"  <span class='text-[10px] uppercase tracking-[0.15em] text-stone-400 w-12 font-semibold shrink-0'>{_h(s.meal)}</span>"
+                        f"  <span class='uppercase text-stone-400 font-semibold shrink-0' style='font-size:10px;letter-spacing:0.1em;width:4.25rem;white-space:nowrap;'>{_h(s.meal)}</span>"
                         f"  <div class='flex-1 min-w-0'>{cell}</div>"
                         f"  <span class='text-amber-400 shrink-0 text-lg leading-none' aria-hidden='true'>›</span>"
                         f"</button>"
@@ -2464,7 +2470,7 @@ def plan_page(
                         f"<div class='slot-leftover flex items-center gap-3 px-5 py-2 border-b border-stone-100 last:border-0 drop-target' "
                         f"data-date='{s.date.isoformat()}' data-meal='{s.meal}'>"
                         f"  {thumb}"
-                        f"  <span class='text-[10px] uppercase tracking-[0.15em] text-stone-400 w-12 font-semibold shrink-0'>{_h(s.meal)}</span>"
+                        f"  <span class='uppercase text-stone-400 font-semibold shrink-0' style='font-size:10px;letter-spacing:0.1em;width:4.25rem;white-space:nowrap;'>{_h(s.meal)}</span>"
                         f"  <div class='flex-1 min-w-0'>{cell}</div>"
                         f"  {actions}"
                         f"</div>"
@@ -2890,7 +2896,7 @@ def plan_page(
               cells.push(
                 `<button type="button" class="move-cell border border-stone-200 rounded-lg p-2 text-left bg-white hover:bg-amber-50 hover:border-amber-300 ${{isSelf ? 'opacity-40 cursor-not-allowed' : ''}}" `
                 + `data-date="${{iso}}" data-meal="${{meal}}" ${{isSelf ? 'disabled' : ''}}>`
-                + `<div class="text-[10px] uppercase tracking-wider text-stone-400 font-semibold">${{meal}}</div>`
+                + `<div class="uppercase tracking-wider text-stone-400 font-semibold" style="font-size:10px;white-space:nowrap;">${{meal}}</div>`
                 + `<div class="text-xs font-medium text-stone-800">${{label}}</div>`
                 + `</button>`
               );
@@ -4167,7 +4173,7 @@ def shop_page(db: Session = Depends(get_session), view: str = "") -> HTMLRespons
         # Multi-part lines (rule 3, e.g. "2 cup + 250 g") have no single
         # unit to offer conversions for — skip the alt-qty menu.
         alts = [] if (own_qty or " + " in (it.display_qty or "")) else _alt_qty_displays(it.qty, it.unit)
-        qty_orig = _h(own_qty or it.display_qty or f"{_fmt_qty(it.qty)} {it.unit}".strip())
+        qty_orig = _h(own_qty or it.display_qty or _qty_text(it.qty, it.unit))
         if alts:
             # Dropdown of unit conversions — tap the qty to open a menu
             # of alternatives, tap one to set. (Was a cycle-on-tap; menu
@@ -4190,7 +4196,7 @@ def shop_page(db: Session = Depends(get_session), view: str = "") -> HTMLRespons
         # to expand one line per contributing recipe (linked). Rows fed
         # by several recipes also show the count (×N).
         src_lines = "".join(
-            f"<div>{_fmt_qty(s.qty)} {_h(s.unit)} · "
+            f"<div>{_h(_qty_text(s.qty, s.unit))} · "
             + (
                 f"<a href='{PREFIX}/app/recipe/{s.recipe_id}' class='text-amber-700 hover:underline'>{_h(s.recipe_name)}</a>"
                 if s.recipe_id else _h(s.recipe_name)
@@ -4278,7 +4284,7 @@ def shop_page(db: Session = Depends(get_session), view: str = "") -> HTMLRespons
                 own = [s for s in it.sources if s.recipe_id == rid]
                 if not own:
                     continue
-                own_qty = " + ".join(f"{_fmt_qty(s.qty)} {s.unit}".strip() for s in own)
+                own_qty = " + ".join(_qty_text(s.qty, s.unit) for s in own)
                 others = sorted({s.recipe_name for s in it.sources if s.recipe_id != rid})
                 is_checked = f"{it.canonical_name}|{it.unit}" in checked_keys
                 mine.append((is_checked, _aggregated_row(it, own_qty=own_qty, also=", ".join(others))))
