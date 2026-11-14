@@ -348,3 +348,32 @@ def test_structure_text_ungrounded_title_returns_none(monkeypatch):
     fake = _FakeAnthropic(payload)
     monkeypatch.setattr(drafter_mod.anthropic, "Anthropic", lambda api_key: fake)
     assert structure_text("a rambling dictated dal recipe...") is None
+
+
+def _fake_web(monkeypatch, pages: dict):
+    """httpx.get stand-in: url → (status, body). Every host resolves public."""
+    import httpx as _httpx
+    monkeypatch.setattr(drafter_mod.socket, "getaddrinfo", lambda h, p: [(2, 1, 6, "", ("93.184.216.34", 0))])
+    calls = []
+
+    def fake_get(url, **kw):
+        calls.append(str(url))
+        for prefix, (status, body) in pages.items():
+            if str(url).startswith(prefix):
+                return _httpx.Response(status, text=body, request=_httpx.Request("GET", url))
+        return _httpx.Response(404, text="", request=_httpx.Request("GET", url))
+
+    monkeypatch.setattr(drafter_mod.httpx, "get", fake_get)
+    return calls
+
+
+def test_fetch_page_blocked_site_says_paste(monkeypatch):
+    _fake_web(monkeypatch, {"https://blog.example/cookies": (403, "blocked")})
+    with pytest.raises(ValueError, match="paste"):
+        drafter_mod.fetch_page("https://blog.example/cookies")
+
+
+def test_fetch_page_404_reports_status(monkeypatch):
+    _fake_web(monkeypatch, {"https://blog.example/gone": (404, "")})
+    with pytest.raises(ValueError, match="404"):
+        drafter_mod.fetch_page("https://blog.example/gone")

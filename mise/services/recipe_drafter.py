@@ -288,26 +288,40 @@ def _assert_public_host(url: str) -> None:
             raise ValueError("That link points somewhere this server can't fetch.")
 
 
+# Statuses that mean "this site won't serve apps", not "no such page".
+_BLOCKED_STATUSES = {401, 403, 429, 451, 503}
+
+
+def _get(url: str) -> str:
+    """GET with redirects followed by hand, so every hop gets the SSRF check."""
+    for _ in range(5):
+        _assert_public_host(url)
+        resp = httpx.get(url, headers=_FETCH_HEADERS, follow_redirects=False, timeout=20.0)
+        if resp.is_redirect:
+            url = str(httpx.URL(url).join(resp.headers.get("location", "")))
+            if not _URL_RE.match(url):
+                raise ValueError("That doesn't look like a web link.")
+            continue
+        resp.raise_for_status()
+        return resp.text
+    raise ValueError("Too many redirects — couldn't read that page.")
+
+
 def fetch_page(url: str) -> str:
     """GET the page. Raises ValueError with a user-facing message on
-    any network/HTTP failure — the adapter maps that to a 400.
-    Redirects are followed manually so every hop gets the SSRF check."""
+    any network/HTTP failure — the adapter maps that to a 400."""
     if not _URL_RE.match(url):
         raise ValueError("That doesn't look like a web link.")
     try:
-        for _ in range(5):
-            _assert_public_host(url)
-            resp = httpx.get(url, headers=_FETCH_HEADERS, follow_redirects=False, timeout=20.0)
-            if resp.is_redirect:
-                url = str(httpx.URL(url).join(resp.headers.get("location", "")))
-                if not _URL_RE.match(url):
-                    raise ValueError("That doesn't look like a web link.")
-                continue
-            resp.raise_for_status()
-            return resp.text
-        raise ValueError("Too many redirects — couldn't read that page.")
+        return _get(url)
     except httpx.HTTPStatusError as e:
-        raise ValueError(f"The site answered {e.response.status_code} — couldn't read that page.") from e
+        status = e.response.status_code
+        if status in _BLOCKED_STATUSES:
+            raise ValueError(
+                "That site blocks apps like Mise from reading it. Open the recipe, "
+                "copy the ingredients and steps, and paste them here instead."
+            ) from e
+        raise ValueError(f"The site answered {status} — couldn't read that page.") from e
     except httpx.HTTPError as e:
         raise ValueError("Couldn't reach that page. Check the link and your connection.") from e
 
