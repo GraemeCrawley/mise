@@ -4486,7 +4486,8 @@ def shop_page(db: Session = Depends(get_session), view: str = "") -> HTMLRespons
             count_badge = ""
         return (
             f"<div class='shop-row-wrap border-b border-stone-100 last:border-0'>"
-            f"  <label class='shop-row flex items-center gap-4 px-4 py-3' data-key='{_h(key)}'>"
+            f"  <label class='shop-row flex items-center gap-4 px-4 py-3' data-key='{_h(key)}' "
+            f"data-rids='{' '.join(str(s.recipe_id) for s in it.sources if s.recipe_id)}'>"
             f"    <input type='checkbox' class='shop-check h-5 w-5 accent-amber-700 cursor-pointer shrink-0'{chk}>"
             f"    {qty_html}"
             f"    <span class='flex-1 min-w-0'>"
@@ -4841,9 +4842,38 @@ def shop_page(db: Session = Depends(get_session), view: str = "") -> HTMLRespons
           }});
         }})();
 
+        // A recipe whose every line is ticked shows its chip ticked too
+        // (data-auto). Tapping that chip unticks its lines again; the
+        // server-side "shopped" state (data-shopped) is separate.
+        function rowsFor(rid) {{
+          const byKey = new Map();
+          document.querySelectorAll('.shop-row[data-rids]').forEach(r => {{
+            if (r.dataset.rids.split(' ').includes(rid) && !byKey.has(r.dataset.key)) byKey.set(r.dataset.key, r); }});
+          return [...byKey.values()];
+        }}
+        function paintChips() {{
+          document.querySelectorAll('.recipe-chip[data-shopped="0"]').forEach(chip => {{
+            const rows = rowsFor(chip.dataset.recipe);
+            const all = rows.length > 0 && rows.every(r => r.querySelector('.shop-check').checked);
+            if ((chip.dataset.auto === '1') === all) return;
+            chip.dataset.auto = all ? '1' : '';
+            chip.setAttribute('aria-pressed', all ? 'true' : 'false');
+            chip.style.background = all ? '#ecfdf5' : '#f5f5f4';
+            chip.style.color = all ? '#78716c' : '#44403c';
+            chip.style.textDecoration = all ? 'line-through' : '';
+            const mark = chip.firstElementChild;
+            if (all) {{ chip.dataset.dot = mark.outerHTML; mark.outerHTML = "<span style='color:#059669;font-weight:600;'>✓</span>"; }}
+            else if (chip.dataset.dot) mark.outerHTML = chip.dataset.dot;
+          }});
+        }}
+
         // Recipe chips: check off / bring back a whole recipe.
         document.querySelectorAll('.recipe-chip').forEach(chip => {{
           chip.addEventListener('click', async () => {{
+            if (chip.dataset.auto === '1') {{
+              rowsFor(chip.dataset.recipe).forEach(r => {{ const cb = r.querySelector('.shop-check'); if (cb.checked) cb.click(); }});
+              return;
+            }}
             const shopped = chip.dataset.shopped !== '1';
             chip.disabled = true;
             try {{
@@ -4860,6 +4890,8 @@ def shop_page(db: Session = Depends(get_session), view: str = "") -> HTMLRespons
             }}
           }});
         }});
+
+        paintChips();
 
         // "Unshop" — revert the shopped-for-the-week banner.
         (function() {{
@@ -4901,6 +4933,7 @@ def shop_page(db: Session = Depends(get_session), view: str = "") -> HTMLRespons
         // and counts stay live without a reload. Also flips the
         // 'Shopping done!' celebration banner when everything's done.
         function updateAllProgress() {{
+          paintChips();
           let totalAll = 0, doneAll = 0;
           // By-recipe view shows a shared line under each recipe: count
           // it once in the overall total.
