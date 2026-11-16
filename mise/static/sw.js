@@ -13,7 +13,7 @@
  *     forces a refresh on the next activate.
  */
 
-const CACHE_NAME  = 'mise-app-v36';
+const CACHE_NAME  = 'mise-app-v37';
 const QUEUE_DB    = 'mise-sync-v1';
 const QUEUE_STORE = 'pending';
 
@@ -23,6 +23,7 @@ const QUEUE_STORE = 'pending';
 const PRECACHE = [
   '/mise/static/tw.css?v=6',
   '/mise/static/manifest.json',
+  '/mise/static/measure.js?v=1',
 ];
 
 self.addEventListener('install', (event) => {

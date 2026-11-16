@@ -34,8 +34,6 @@ from datetime import UTC, date as _Date, datetime, timedelta as _Td
 from pathlib import Path as _Path
 from urllib.parse import urlparse
 
-import pint as _pint
-_UREG = _pint.UnitRegistry()
 
 from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi.responses import HTMLResponse, RedirectResponse
@@ -56,6 +54,7 @@ from mise.models import (
     StepSection,
 )
 from mise.services import planner as planner_service
+from mise.services.measure import Measure, combine, fmt_number, units_json
 from mise.services.llm_verify import VALID_CATEGORIES
 from mise.services.step_annotator import find_mentions
 from mise.services.shopping_aggregator import (
@@ -194,26 +193,12 @@ def _recipe_color(recipe_id: int | None) -> str:
 
 
 def _fmt_qty(q: float | int | None) -> str:
-    """Render a quantity nicely — fractions for halves/quarters/thirds,
-    int when integral, otherwise short decimal."""
-    if q is None:
-        return ""
-    qf = float(q)
-    if abs(qf - round(qf)) < 0.01:
-        return str(int(round(qf)))
-    glyph = {0.25: "¼", 0.5: "½", 0.75: "¾", 0.333: "⅓", 0.667: "⅔", 0.125: "⅛"}
-    integer = int(qf)
-    frac = qf - integer
-    for f, g in glyph.items():
-        if abs(frac - f) < 0.03:
-            return (f"{integer}" if integer else "") + g
-    return f"{qf:g}"
+    return fmt_number(q)
 
 
 def _qty_text(q, unit: str | None) -> str:
     """'2 cup', or just '2' for counts ("ea" is storage, not something to show)."""
-    u = "" if (unit or "") == "ea" else (unit or "")
-    return f"{_fmt_qty(q)} {u}".strip()
+    return Measure.of(q, unit).text()
 
 
 def _step_html(text: str, ingredients: list[tuple]) -> str:
@@ -225,7 +210,7 @@ def _step_html(text: str, ingredients: list[tuple]) -> str:
         labels = m.labels or ("",) * len(m.parts)
         parts = " + ".join(
             # Counts read better bare: "eggs (4)", not "eggs (4 ea)".
-            f"<span class='ing-qty' data-qty='{q}' data-unit='{_h(u)}'>{_fmt_qty(q)}{' ' + _h(u) if u else ''}</span>"
+            Measure.of(q, u).html("ing-qty")
             + (f" {_h(lab)}" if lab else "")
             for (q, u), lab in zip(((q, "" if u == "ea" else u) for q, u in m.parts), labels)
         )
@@ -234,79 +219,6 @@ def _step_html(text: str, ingredients: list[tuple]) -> str:
         pos = m.end
     out.append(_h(text[pos:]))
     return "".join(out)
-
-
-# --- shop-list unit conversion (tap qty to cycle) ---------------------------
-
-# Aliases — what Mise stores vs what Pint understands. lb / oz are
-# ambiguous in Pint (force-vs-mass); we want cooking-mass semantics.
-_PINT_UNIT_ALIAS: dict[str, str] = {
-    "tbsp": "tablespoon",
-    "tsp":  "teaspoon",
-    "cup":  "cup",
-    "fl oz": "fluid_ounce",
-    "fl_oz": "fluid_ounce",
-    "lb":   "pound",
-    "lbs":  "pound",
-    "oz":   "ounce",
-    "g":    "gram",
-    "kg":   "kilogram",
-    "ml":   "milliliter",
-    "l":    "liter",
-}
-_VOLUME_GROUP = ["cup", "tbsp", "tsp", "fl oz", "ml", "l"]
-_MASS_GROUP   = ["lb", "oz", "g", "kg"]
-
-
-def _round_for_display(value: float) -> str:
-    """Round a converted magnitude to a sensible-looking number."""
-    if value >= 100:
-        return str(int(round(value)))
-    if value >= 10:
-        return f"{value:.1f}".rstrip("0").rstrip(".")
-    if value >= 1:
-        return f"{value:.2f}".rstrip("0").rstrip(".")
-    return f"{value:.3f}".rstrip("0").rstrip(".")
-
-
-def _unit_group(unit: str) -> list[str] | None:
-    u = unit.lower().strip()
-    if u in _VOLUME_GROUP: return _VOLUME_GROUP
-    if u in _MASS_GROUP:   return _MASS_GROUP
-    return None
-
-
-def _alt_qty_displays(qty: float | int | None, unit: str | None) -> list[str]:
-    """Alternative '{n} {unit}' strings for the given quantity, in
-    cycle order. Returns [] when the unit isn't a convertible mass /
-    volume (e.g. 'pcs', 'each', '')."""
-    if qty is None or not unit:
-        return []
-    group = _unit_group(unit)
-    if not group:
-        return []
-    pint_src = _PINT_UNIT_ALIAS.get(unit.lower().strip())
-    if not pint_src:
-        return []
-    try:
-        q = _UREG.Quantity(float(qty), pint_src)
-    except Exception:
-        return []
-    out: list[str] = []
-    for tgt in group:
-        if tgt == unit.lower().strip():
-            continue
-        pint_tgt = _PINT_UNIT_ALIAS.get(tgt)
-        if not pint_tgt:
-            continue
-        try:
-            converted = q.to(pint_tgt).magnitude
-            if converted <= 0:
-                continue
-            out.append(f"{_round_for_display(converted)} {tgt}")
-        except Exception:
-            continue
-    return out
 
 
 # =============================================================================
@@ -318,6 +230,8 @@ _APP_CSS = f"""
 <link rel="manifest" href="{PREFIX}/static/manifest.json">
 <link rel="apple-touch-icon" href="{PREFIX}/static/icon-180.png">
 <link rel="icon" type="image/svg+xml" href="{PREFIX}/static/icon.svg">
+<script>window.MISE_UNITS = {units_json()};</script>
+<script src="{PREFIX}/static/measure.js?v=1" defer></script>
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="theme-color" content="#FAF7F2">
@@ -326,6 +240,14 @@ _APP_CSS = f"""
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&display=swap" rel="stylesheet">
 <style>
   html, body {{ overflow-x: hidden; max-width: 100vw; }}
+  /* Quantities you can tap for other units (static/measure.js). */
+  .measure-tap {{ cursor: pointer; text-decoration: underline dotted #d6d3d1; text-underline-offset: 3px; }}
+  .measure-menu {{ position: fixed; z-index: 90; background: #fff; border: 1px solid #e7e5e4; border-radius: 0.6rem;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.12); padding: 0.25rem; min-width: 7rem; }}
+  .measure-menu[hidden] {{ display: none; }}
+  .measure-menu button {{ display: block; width: 100%; text-align: left; padding: 7px 10px; font-size: 14px; border-radius: 0.4rem;
+    font-variant-numeric: tabular-nums; color: #44403c; background: transparent; border: 0; font-family: Inter, system-ui, sans-serif; }}
+  .measure-menu button.is-current {{ background: #FDE68A; color: #78350F; font-weight: 600; }}
   body {{
     font-family: 'Inter', system-ui, sans-serif;
     -webkit-font-smoothing: antialiased;
@@ -1092,12 +1014,7 @@ def recipe_page(recipe_id: int, db: Session = Depends(get_session)) -> HTMLRespo
                 # data-qty + data-unit drive the serving-scaler JS: when
                 # the user bumps the SERVES stepper, JS walks .ing-qty
                 # nodes and multiplies by the new factor in place.
-                qty = (
-                    f"<span class='font-medium text-stone-900 ing-qty' "
-                    f"data-qty='{i.qty or 0}' data-unit='{_h('' if i.unit == 'ea' else (i.unit or ''))}'>"
-                    f"{_h(_qty_text(i.qty, i.unit))}"
-                    f"</span> "
-                )
+                qty = Measure.of(i.qty, i.unit).html("font-medium text-stone-900 ing-qty") + " "
             prep = f", {_h(i.prep_note)}" if i.prep_note else ""
             opt = " <span class='text-stone-400'>(optional)</span>" if i.optional else ""
             cat_pill = (
@@ -1642,31 +1559,13 @@ def recipe_page(recipe_id: int, db: Session = Depends(get_session)) -> HTMLRespo
         const indicator = document.getElementById('scale-indicator');
         if (!srvVal || !srvDec || !srvInc) return;
 
-        // JS mirror of _fmt_qty — fractions for halves/quarters,
-        // integer when integral, short decimal otherwise.
-        function fmtQty(q) {{
-          if (q == null || isNaN(q)) return '';
-          if (Math.abs(q - Math.round(q)) < 0.01) return String(Math.round(q));
-          const integer = Math.floor(q);
-          const frac = q - integer;
-          const glyphs = [[0.125,'⅛'],[0.25,'¼'],[0.333,'⅓'],[0.5,'½'],[0.667,'⅔'],[0.75,'¾']];
-          for (const [f, g] of glyphs) {{
-            if (Math.abs(frac - f) < 0.03) return (integer ? integer : '') + g;
-          }}
-          // 1 decimal if >= 1, else 2 decimals; strip trailing zeros.
-          const fixed = q >= 1 ? q.toFixed(1) : q.toFixed(2);
-          return fixed.replace(/\\.?0+$/, '');
-        }}
-
         function rescale() {{
           srvVal.textContent = current;
           const factor = current / DEFAULT_SRV;
           document.querySelectorAll('.ing-qty').forEach(el => {{
-            const baseQty = parseFloat(el.dataset.qty || '0');
-            if (!baseQty) return;
-            const unit = el.dataset.unit || '';
-            const scaled = baseQty * factor;
-            el.textContent = (unit ? (fmtQty(scaled) + ' ' + unit) : fmtQty(scaled));
+            if (!parseFloat(el.dataset.qty || '0')) return;
+            el.dataset.scale = factor;
+            window.Measure.render(el);
           }});
           if (factor === 1) {{
             indicator.hidden = true;
@@ -4436,7 +4335,7 @@ def shop_page(db: Session = Depends(get_session), view: str = "") -> HTMLRespons
         _chip(rid, t, True) for rid, t in done_titles.items()
     )
 
-    def _aggregated_row(it: ShoppingItem, own_qty: str | None = None, also: str = "") -> str:
+    def _aggregated_row(it: ShoppingItem, own_qty: list[Measure] | None = None, also: str = "") -> str:
         # own_qty/also: by-recipe view — show this recipe's share of the
         # line and which other recipes need it too. Same key either way,
         # so a tick is one tick everywhere.
@@ -4444,33 +4343,23 @@ def shop_page(db: Session = Depends(get_session), view: str = "") -> HTMLRespons
         is_checked = key in checked_keys
         chk = " checked" if is_checked else ""
         struck = " line-through text-stone-400" if is_checked else ""
-        # Multi-part lines (rule 3, e.g. "2 cup + 250 g") have no single
-        # unit to offer conversions for — skip the alt-qty menu.
-        alts = [] if (own_qty or " + " in (it.display_qty or "")) else _alt_qty_displays(it.qty, it.unit)
-        qty_orig = _h(own_qty or it.display_qty or _qty_text(it.qty, it.unit))
-        if alts:
-            # Dropdown of unit conversions — tap the qty to open a menu
-            # of alternatives, tap one to set. (Was a cycle-on-tap; menu
-            # lets you jump straight to the unit you want.)
-            opts_html = "".join(
-                f"<button type='button' class='qty-opt{' is-current' if i == 0 else ''}'>{_h(opt)}</button>"
-                for i, opt in enumerate([qty_orig] + alts)
-            )
-            qty_html = (
-                f"<span class='qty-wrap shrink-0'>"
-                f"  <button type='button' class='row-qty qty-tap serif text-base font-medium w-24 text-right text-stone-700 tabular-nums{struck}'>{qty_orig}</button>"
-                f"  <div class='qty-menu' hidden>{opts_html}</div>"
-                f"</span>"
-            )
+        # Each part is a Measure: tap a cup/g amount for the unit dropdown.
+        # Shop-only displays ("1 bag", "2 cup + 250 g") stay as written.
+        total = Measure.of(it.qty, it.unit)
+        if own_qty is not None:
+            inner = " + ".join(m.html() for m in own_qty)
+        elif not it.display_qty or it.display_qty == total.text():
+            inner = total.html()
         else:
-            qty_html = (
-                f"<span class='row-qty serif text-base font-medium w-24 text-right text-stone-700 tabular-nums shrink-0{struck}'>{qty_orig}</span>"
-            )
+            inner = _h(it.display_qty)
+        qty_html = (
+            f"<span class='row-qty serif text-base font-medium w-24 text-right text-stone-700 tabular-nums shrink-0{struck}'>{inner}</span>"
+        )
         # Every row can show where it came from: tap the ▾ on the right
         # to expand one line per contributing recipe (linked). Rows fed
         # by several recipes also show the count (×N).
         src_lines = "".join(
-            f"<div>{_h(_qty_text(s.qty, s.unit))} · "
+            f"<div>{Measure.of(s.qty, s.unit).html()} · "
             + (
                 f"<a href='{PREFIX}/app/recipe/{s.recipe_id}' class='text-amber-700 hover:underline'>{_h(s.recipe_name)}</a>"
                 if s.recipe_id else _h(s.recipe_name)
@@ -4559,7 +4448,7 @@ def shop_page(db: Session = Depends(get_session), view: str = "") -> HTMLRespons
                 own = [s for s in it.sources if s.recipe_id == rid]
                 if not own:
                     continue
-                own_qty = " + ".join(_qty_text(s.qty, s.unit) for s in own)
+                own_qty = combine([Measure.of(s.qty, s.unit) for s in own])
                 others = sorted({s.recipe_name for s in it.sources if s.recipe_id != rid})
                 is_checked = f"{it.canonical_name}|{it.unit}" in checked_keys
                 mine.append((is_checked, _aggregated_row(it, own_qty=own_qty, also=", ".join(others))))
@@ -4720,88 +4609,8 @@ def shop_page(db: Session = Depends(get_session), view: str = "") -> HTMLRespons
            tells you the cell is interactive. Tap opens a dropdown of
            alternative units; tap one to pick. */
         .qty-wrap {{ position: relative; display: inline-block; }}
-        button.row-qty.qty-tap {{
-          background: transparent; border: 0;
-          cursor: pointer;
-          text-decoration: underline dotted #d6d3d1;
-          text-underline-offset: 3px;
-        }}
-        button.row-qty.qty-tap:active {{ color: #b45309; }}
-        /* Fixed, not absolute: the category card is overflow-hidden
-           (rounded corners), which clipped the menu on a card's last
-           rows. JS moves it to <body> and places it from the button's
-           viewport rect. */
-        .qty-menu {{
-          position: fixed;
-          background: white; border: 1px solid #e7e5e4;
-          border-radius: 0.625rem;
-          box-shadow: 0 8px 24px -4px rgba(0,0,0,0.15), 0 0 0 1px rgba(0,0,0,0.03);
-          min-width: 7.5rem; z-index: 30;
-          padding: 0.25rem;
-        }}
-        .qty-menu[hidden] {{ display: none; }}
-        .qty-opt {{
-          display: block; width: 100%; text-align: right;
-          padding: 6px 10px; font-size: 13px;
-          border-radius: 0.4rem;
-          font-variant-numeric: tabular-nums;
-          color: #44403c; background: transparent; border: 0;
-        }}
-        .qty-opt:active {{ background: #FEF3C7; }}
-        .qty-opt.is-current {{ background: #FDE68A; color: #78350F; font-weight: 600; }}
       </style>
       <script>
-        // Unit-conversion dropdown. Tap the qty → menu of alternative
-        // units pops below. Tap an option → qty displays that unit.
-        // preventDefault + stopPropagation on every click stops the
-        // surrounding <label> from toggling the checkbox.
-        document.querySelectorAll('.qty-wrap').forEach(wrap => {{
-          const btn  = wrap.querySelector('button.row-qty.qty-tap');
-          const menu = wrap.querySelector('.qty-menu');
-          if (!btn || !menu) return;
-          btn.addEventListener('click', (e) => {{
-            e.preventDefault();
-            e.stopPropagation();
-            document.querySelectorAll('.qty-menu:not([hidden])').forEach(m => {{
-              if (m !== menu) m.hidden = true;
-            }});
-            // Lift the menu out to <body>: the category <section> keeps a
-            // transform from its entry animation, which would re-anchor
-            // (and clip) a fixed child.
-            if (menu.parentElement !== document.body) document.body.appendChild(menu);
-            menu.hidden = !menu.hidden;
-            if (menu.hidden) return;
-            // Below the qty, flipping above when it would run off-screen.
-            const r = btn.getBoundingClientRect();
-            const mh = menu.offsetHeight, mw = menu.offsetWidth;
-            const below = r.bottom + 4;
-            const top = (below + mh > window.innerHeight - 8) ? r.top - 4 - mh : below;
-            menu.style.top = Math.max(8, top) + 'px';
-            menu.style.left = Math.max(8, Math.min(r.right - mw, window.innerWidth - mw - 8)) + 'px';
-          }});
-          menu.querySelectorAll('.qty-opt').forEach(opt => {{
-            opt.addEventListener('click', (e) => {{
-              e.preventDefault();
-              e.stopPropagation();
-              btn.textContent = opt.textContent;
-              menu.querySelectorAll('.qty-opt').forEach(o => o.classList.remove('is-current'));
-              opt.classList.add('is-current');
-              menu.hidden = true;
-            }});
-          }});
-        }});
-        // Outside-click, scroll + Escape close any open menu (a fixed
-        // menu would otherwise float away from its row on scroll).
-        const closeQtyMenus = () =>
-          document.querySelectorAll('.qty-menu:not([hidden])').forEach(m => m.hidden = true);
-        document.addEventListener('click', closeQtyMenus);
-        window.addEventListener('scroll', closeQtyMenus, {{ passive: true }});
-        document.addEventListener('keydown', (e) => {{
-          if (e.key === 'Escape') {{
-            document.querySelectorAll('.qty-menu:not([hidden])').forEach(m => m.hidden = true);
-          }}
-        }});
-
         // "Reset" — wipe all check-offs for this week. Confirms first
         // (destructive-ish). The 3s sync poll will replicate this to
         // any other open device.

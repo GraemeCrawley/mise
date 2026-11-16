@@ -319,8 +319,9 @@ def test_recipe_page_shows_inline_step_quantities(client, session, household, mo
         "llm_verify": "off",
     }).json()
     page = client.get(f"/app/recipe/{posted['id']}").text
-    assert "Cook eggs<span class='step-qty'> (<span class='ing-qty' data-qty='4.0' data-unit=''>4</span>)</span>" in page
-    assert "data-unit='cup'>2 cup</span>)</span>" in page
+    assert "Cook eggs<span class='step-qty'> (<span class='measure ing-qty' data-qty='4' data-unit=''>4</span>)</span>" in page
+    # Cups convert, so the step quantity is tappable for other units.
+    assert "<span class='measure measure-tap ing-qty' data-qty='2' data-unit='cup'>2 cup</span>)</span>" in page
 
 
 def test_review_queue_item_opens_draft_screen(client, session, household, monkeypatch, tmp_path):
