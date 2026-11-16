@@ -2211,16 +2211,18 @@ def _week_cell(s) -> str:
 @router.get("/app/plan/session", response_class=HTMLResponse)
 def plan_session_page(db: Session = Depends(get_session)) -> HTMLResponse:
     from mise.services import weekplan
-    today = _Date.today()
-    nw = weekplan.next_week(today)
-    start = today + _Td(days=1)
-    view = planner_service.get_view(start, (nw[-1] - start).days + 1, db)
+    from mise.services.reminders import household_today
+    today = household_today(db)
+    shown, nw = weekplan.planning_days(today)
+    ahead = today.weekday() >= weekplan.PLAN_AHEAD_FROM  # next week is on the page
+    start, end = shown[0], shown[-1]
+    view = planner_service.get_view(start, (end - start).days + 1, db)
     prep_default = weekplan.default_prep_day(db, nw)
     open_count = len(weekplan.uncovered(db, [d.date for d in view]))
 
     rows = []
     for day in view:
-        if day.date == nw[0] and day is not view[0]:
+        if ahead and day.date == nw[0] and day is not view[0]:
             rows.append("<div class='serif text-base font-medium pt-3 pb-1' style='border-top:1px solid #E7E5E4'>Next week</div>")
         cells = "".join(_week_cell(next(x for x in day.slots if x.meal == m)) for m in weekplan.MEALS)
         rows.append(
@@ -2271,7 +2273,7 @@ def plan_session_page(db: Session = Depends(get_session)) -> HTMLResponse:
     body = f"""
       <div class="mb-1 text-[10px] uppercase tracking-[0.25em] text-stone-400">Weekly planning</div>
       <h1 class="serif text-4xl font-medium tracking-tight leading-none">Plan the <em class="text-stone-500">week</em>.</h1>
-      <p class="text-sm text-stone-500 mt-2">Tomorrow through Sunday {nw[-1].strftime('%b %-d')}.</p>
+      <p class="text-sm text-stone-500 mt-2">Tomorrow through Sunday {end.strftime('%b %-d')}.{"" if ahead else " Next week joins on Thursday, your planning day."}</p>
 
       <div class="card p-4 mt-5" id="week">
         <div class="flex items-baseline justify-between">
@@ -2316,7 +2318,7 @@ def plan_session_page(db: Session = Depends(get_session)) -> HTMLResponse:
 
       <script>
       (function() {{
-        const P = '{PREFIX}', PER = {hh.default_servings_per_meal or 2}, END = '{nw[-1].isoformat()}';
+        const P = '{PREFIX}', PER = {hh.default_servings_per_meal or 2}, END = '{end.isoformat()}';
         const $ = s => document.querySelector(s);
         const post = async (path, body) => {{
           const r = await fetch(P + path, {{ method: 'POST', headers: {{ 'Content-Type': 'application/json' }}, body: JSON.stringify(body) }});

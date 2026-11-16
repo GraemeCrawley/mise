@@ -96,3 +96,16 @@ def test_session_page_script_parses(client, tmp_path, household):
     f.write_text([j for j in js if "wk-cell" in j][0])
     r = subprocess.run([node, "--check", str(f)], capture_output=True, text=True)
     assert r.returncode == 0, r.stderr
+
+
+def test_next_week_joins_the_page_on_thursday():
+    from datetime import date
+    from mise.services.weekplan import planning_days
+    mon_shown, mon_prep = planning_days(date(2026, 11, 16))
+    assert mon_shown[0] == date(2026, 11, 17) and mon_shown[-1] == date(2026, 11, 22)
+    assert mon_prep == mon_shown
+    thu_shown, thu_prep = planning_days(date(2026, 11, 19))
+    assert thu_shown[0] == date(2026, 11, 20) and thu_shown[-1] == date(2026, 11, 29)
+    assert thu_prep[0] == date(2026, 11, 23)
+    sun_shown, _ = planning_days(date(2026, 11, 22))
+    assert sun_shown[0] == date(2026, 11, 23) and len(sun_shown) == 7

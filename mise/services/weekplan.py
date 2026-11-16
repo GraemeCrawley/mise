@@ -27,6 +27,19 @@ def next_week(today: _date) -> list[_date]:
     return [monday + timedelta(days=i) for i in range(7)]
 
 
+PLAN_AHEAD_FROM = 3  # Thursday: the planning day, when next week joins the page
+
+
+def planning_days(today: _date) -> tuple[list[_date], list[_date]]:
+    """(days shown, prep-day choices). Mon-Wed: just the rest of this week.
+    From Thursday: the rest of this week plus next week, prep in next week."""
+    rest = rest_of_week(today)
+    if today.weekday() < PLAN_AHEAD_FROM:
+        return rest, rest
+    nw = next_week(today)
+    return rest + nw, nw
+
+
 def status_of(note: str | None) -> str | None:
     """'away' / 'out' / 'flex' for the quick statuses, 'note' for other text."""
     if not note:
