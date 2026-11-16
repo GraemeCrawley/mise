@@ -1406,12 +1406,24 @@ def recipe_page(recipe_id: int, db: Session = Depends(get_session)) -> HTMLRespo
       (function() {{
         const btn = document.getElementById('cook-mode-btn');
         let wakeLock = null;
+        // The phone drops the lock whenever Mise goes to the background;
+        // clear our handle when it does so coming back asks again.
+        async function keepAwake(announce) {{
+          if (wakeLock || !document.body.classList.contains('cook-mode')) return;
+          try {{
+            wakeLock = await navigator.wakeLock.request('screen');
+            wakeLock.addEventListener('release', () => {{ wakeLock = null; }});
+            if (announce && window.notify) window.notify('Screen will stay on while cooking', {{tone:'success'}});
+          }} catch (e) {{
+            if (window.notify) window.notify("This phone won't keep the screen on — it may dim while you cook.", {{tone:'error'}});
+          }}
+        }}
 
         async function enter() {{
           document.body.classList.add('cook-mode');
           btn.textContent = '✕ Exit cook mode';
           wrapTimers();
-          try {{ wakeLock = await navigator.wakeLock.request('screen'); }} catch (e) {{}}
+          await keepAwake(true);
         }}
         async function leave() {{
           document.body.classList.remove('cook-mode');
@@ -1424,10 +1436,7 @@ def recipe_page(recipe_id: int, db: Session = Depends(get_session)) -> HTMLRespo
         // Re-acquire the wake lock if the page becomes visible again
         // (iOS releases on visibilitychange).
         document.addEventListener('visibilitychange', async () => {{
-          if (document.body.classList.contains('cook-mode') &&
-              document.visibilityState === 'visible' && !wakeLock) {{
-            try {{ wakeLock = await navigator.wakeLock.request('screen'); }} catch (e) {{}}
-          }}
+          if (document.visibilityState === 'visible') await keepAwake(false);
         }});
 
         function wrapTimers() {{
