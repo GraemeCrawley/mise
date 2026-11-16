@@ -230,10 +230,14 @@ def _step_html(text: str, ingredients: list[tuple]) -> str:
 
 _APP_CSS = f"""
 <link rel="stylesheet" href="{PREFIX}/static/tw.css?v=6">
-<link rel="manifest" href="{PREFIX}/static/manifest.json">
+<link rel="manifest" href="{PREFIX}/static/manifest.json" crossorigin="use-credentials">
 <link rel="apple-touch-icon" href="{PREFIX}/static/icon-180.png">
 <link rel="icon" type="image/svg+xml" href="{PREFIX}/static/icon.svg">
-<script>window.MISE_UNITS = {units_json()};</script>
+<script>window.MISE_UNITS = {units_json()};
+// Installed on the home screen? iOS doesn't always match the CSS
+// display-mode query (e.g. when Cloudflare blocks the manifest), but
+// navigator.standalone is reliable there.
+if (navigator.standalone === true || matchMedia('(display-mode: standalone)').matches) document.documentElement.classList.add('is-app');</script>
 <script src="{PREFIX}/static/measure.js?v=4" defer></script>
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
@@ -361,11 +365,9 @@ _APP_CSS = f"""
   }}
   /* PWA standalone: no browser chrome at the bottom, so the floating
      bar can hug the safe-area inset. Same for the FAB + body padding. */
-  @media (display-mode: standalone) {{
-    body {{ padding-bottom: calc(5rem + env(safe-area-inset-bottom)); }}
-    .tab-bar {{ bottom: calc(0.4rem + env(safe-area-inset-bottom)); }}
-    .fb-fab  {{ bottom: calc(5rem + env(safe-area-inset-bottom)); }}
-  }}
+  html.is-app body {{ padding-bottom: calc(5rem + env(safe-area-inset-bottom)); }}
+  html.is-app .tab-bar {{ bottom: calc(0.4rem + env(safe-area-inset-bottom)); }}
+  html.is-app .fb-fab  {{ bottom: calc(5rem + env(safe-area-inset-bottom)); }}
   /* ----- Tap feedback ----------------------------------------------
      iOS doesn't fire :hover from touch, so we need explicit :active
      states to confirm a press. Every interactive surface flashes
