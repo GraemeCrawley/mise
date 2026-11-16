@@ -136,6 +136,21 @@
     return v == null || !isFinite(v) ? null : v;
   }
 
+  // Fraction keys; after a whole number they make a mixed number (1 then ½ = 1½).
+  const FRACS = [[0.125, '⅛'], [0.25, '¼'], [1 / 3, '⅓'], [0.5, '½'], [2 / 3, '⅔'], [0.75, '¾']];
+  const FRAC = Object.fromEntries(FRACS.map(([f, g]) => [g, f]));
+  // Cups and spoons read best as the nearest kitchen fraction (eighths or
+  // thirds); the exact value shows underneath when it was rounded.
+  const IMPERIAL = new Set(['tsp', 'tbsp', 'cup', 'fl oz', 'oz', 'lb']);
+  function kitchen(v, unit) {
+    if (!IMPERIAL.has(unit) || Math.abs(v) < 0.1) return v;
+    const w = Math.floor(v), f = v - w;
+    let best = 0;
+    for (const c of [0, 0.125, 0.25, 1 / 3, 0.375, 0.5, 0.625, 2 / 3, 0.75, 0.875, 1])
+      if (Math.abs(f - c) < Math.abs(f - best)) best = c;
+    return w + best;
+  }
+
   let pad = null, st = null;
   function calc(el) {
     const s = shown(el), from = el.dataset.unit, d = dens(el), dim = T.units[from][0];
@@ -148,8 +163,9 @@
       const keys = ['C', '(', ')', '÷', '7', '8', '9', '×', '4', '5', '6', '−', '1', '2', '3', '+', '0', '.', '⌫', '='];
       pad.innerHTML = `<div class="mc-panel" role="dialog" aria-label="Calculator">
         <div class="mc-head"><span>${CALC_ICON} Calculator</span><button type="button" data-k="close" aria-label="Close">✕</button></div>
-        <div class="mc-expr"></div><div class="mc-out"></div>
+        <div class="mc-expr"></div><div class="mc-out"></div><div class="mc-exact"></div>
         <div class="mc-units"></div>
+        <div class="mc-fracs">${FRACS.map(([f, g]) => `<button type="button" data-k="${g}">${g}</button>`).join('')}</div>
         <div class="mc-keys">${keys.map(k => `<button type="button" data-k="${k}" class="${OPS[k] || k === '=' ? 'is-op' : ''}">${k}</button>`).join('')}</div>
       </div>`;
       document.body.appendChild(pad);
@@ -176,12 +192,20 @@
   }
   function key(k) {
     const t = st.toks, last = t[t.length - 1];
-    const typing = last && typeof last === 'object' && !last.fixed;
+    const typing = last && typeof last === 'object' && !last.fixed && !last.frac;
     if (k === 'close') { pad.hidden = true; return; }
     if (k === 'C') st.toks = [];
     else if (k === '=') collapse();
-    else if (k === '⌫') {
-      if (typing && last.s.length > 1) { last.s = last.s.slice(0, -1); last.v = parseFloat(last.s) || 0; }
+    else if (FRAC[k] != null) {
+      const whole = typing && /^\d+$/.test(last.s);
+      if (whole) { last.v += FRAC[k]; last.s += k; last.frac = true; }
+      else {
+        if (last && (typeof last === 'object' || last === ')')) { if (last.fixed || last.frac) t.pop(); else t.push('×'); }
+        t.push({ v: FRAC[k], s: k, frac: true });
+      }
+    } else if (k === '⌫') {
+      if (last && last.frac && last.s.length > 1) { last.s = last.s.slice(0, -1); last.v = parseFloat(last.s); delete last.frac; }
+      else if (typing && last.s.length > 1) { last.s = last.s.slice(0, -1); last.v = parseFloat(last.s) || 0; }
       else t.pop();
     } else if (/[0-9.]/.test(k)) {
       if (typing) { if (k === '.' && last.s.includes('.')) return; last.s += k; last.v = parseFloat(last.s) || 0; }
@@ -214,7 +238,9 @@
     const v = evaluate(st.toks);
     const single = st.toks.length === 1 && typeof st.toks[0] === 'object';
     pad.querySelector('.mc-expr').textContent = single ? '' : st.toks.map(x => typeof x === 'object' ? x.s : x).join(' ');
-    pad.querySelector('.mc-out').textContent = v == null ? (st.toks.length ? '…' : '0') : label(v, st.unit, st.from);
+    const k = v == null ? null : kitchen(v, st.unit);
+    pad.querySelector('.mc-out').textContent = v == null ? (st.toks.length ? '…' : '0') : label(k, st.unit, st.from);
+    pad.querySelector('.mc-exact').textContent = k != null && Math.abs(k - v) > 0.004 ? `exactly ${+v.toFixed(3)} ${st.unit}` : '';
     pad.querySelector('.mc-units').innerHTML = st.units.map(u =>
       `<button type="button" data-u="${u}" class="${u === st.unit ? 'is-current' : ''}">${u}</button>`).join('');
   }

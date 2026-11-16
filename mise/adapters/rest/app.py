@@ -238,7 +238,7 @@ _APP_CSS = f"""
 // display-mode query (e.g. when Cloudflare blocks the manifest), but
 // navigator.standalone is reliable there.
 if (navigator.standalone === true || matchMedia('(display-mode: standalone)').matches) document.documentElement.classList.add('is-app');</script>
-<script src="{PREFIX}/static/measure.js?v=4" defer></script>
+<script src="{PREFIX}/static/measure.js?v=5" defer></script>
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="theme-color" content="#FAF7F2">
@@ -272,6 +272,10 @@ if (navigator.standalone === true || matchMedia('(display-mode: standalone)').ma
   .measure-calc .mc-units button {{ flex: none; border: 1px solid #e7e5e4; background: #fff; border-radius: 999px; padding: 4px 11px;
     font-size: 13px; color: #57534e; touch-action: manipulation; }}
   .measure-calc .mc-units button.is-current {{ background: #FDE68A; border-color: #FCD34D; color: #78350F; font-weight: 600; }}
+  .measure-calc .mc-exact {{ min-height: 1rem; text-align: right; color: #a8a29e; font-size: 12px; font-variant-numeric: tabular-nums; }}
+  .measure-calc .mc-fracs {{ display: grid; grid-template-columns: repeat(6, 1fr); gap: 6px; margin: 0.25rem 0 8px; }}
+  .measure-calc .mc-fracs button {{ height: 2.5rem; border: 0; border-radius: 0.7rem; background: #FEF3C7; color: #78350F; font-size: 19px;
+    touch-action: manipulation; font-family: Inter, system-ui, sans-serif; }}
   .measure-calc .mc-keys {{ display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-top: 0.25rem; }}
   .measure-calc .mc-keys button {{ height: 3.1rem; border: 0; border-radius: 0.8rem; background: #fff; font-size: 20px; color: #1c1917;
     box-shadow: 0 1px 2px rgba(0,0,0,0.06); touch-action: manipulation; font-family: Inter, system-ui, sans-serif; }}
