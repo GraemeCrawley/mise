@@ -446,3 +446,33 @@ class Feedback(SQLModel, table=True):
     # relative to a screenshots directory (resolved at serve time).
     # Deleted on status transition out of "new" so the disk stays bounded.
     screenshot_path: str | None = None
+
+
+class PushSubscription(SQLModel, table=True):
+    """One phone/browser that turned on Mise notifications. No person attached
+    on purpose — every subscribed device gets household notifications."""
+
+    id: int | None = Field(default=None, primary_key=True)
+    endpoint: str = Field(unique=True)
+    p256dh: str
+    auth: str
+    label: str | None = None  # device name typed on the test page
+    origin: str | None = None  # page origin, for absolute tap-target URLs
+    user_agent: str | None = None
+    created_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
+    last_ok_at: datetime | None = None
+    last_error: str | None = None
+
+
+class PushEvent(SQLModel, table=True):
+    """Delivery trail for a notification: sent → received (service worker) →
+    clicked → opened, plus what the person reported seeing. Lets the test page
+    show what actually happened on each phone."""
+
+    id: int | None = Field(default=None, primary_key=True)
+    test_id: str = Field(index=True)
+    kind: str
+    subscription_id: int | None = Field(default=None, index=True)
+    stage: str  # sent | send_failed | received | clicked | opened | report
+    detail: str | None = None
+    created_at: datetime = Field(default_factory=lambda: datetime.now(UTC), index=True)

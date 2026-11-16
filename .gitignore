@@ -42,3 +42,6 @@ dist/
 
 # Your own recipe backups (JSON written by the app)
 /recipes-export/
+
+# Web push signing key (generated on first use)
+vapid_private.pem

@@ -586,3 +586,25 @@ def test_recipe_page_offers_existing_tags(client, session: Session, household: H
     assert all_tags[0] == "Soup"  # most used first
     assert set(all_tags) == {"Soup", "Quick", "Nonni", "Favourites"}
     assert 'id="tag-menu"' in page
+
+
+def test_treat_fills_only_its_day_and_shows_only_when_used(session: Session, household: Household) -> None:
+    from mise.services.planner import TREAT, get_view
+    r = _recipe(session, household.id, "Coconut Macaroons", servings=26)
+    sess = place(r.id, date(2026, 6, 1), TREAT, session)
+    session.commit()
+    slots = session.exec(select(SlotAssignment).where(SlotAssignment.session_id == sess.id)).all()
+    assert [(s.date, s.meal) for s in slots] == [(date(2026, 6, 1), TREAT)]
+    day1, day2 = get_view(date(2026, 6, 1), 2, session)
+    assert [s.meal for s in day1.slots] == ["breakfast", "lunch", "dinner", TREAT]
+    assert [s.meal for s in day2.slots] == ["breakfast", "lunch", "dinner"]
+
+
+def test_plan_page_placing_mode(client, session: Session, household: Household) -> None:
+    r = _recipe(session, household.id, "Coconut Macaroons", servings=26)
+    page = client.get(f"/app/plan?place={r.id}").text
+    assert "Placing — tap a slot" in page and "Coconut Macaroons" in page
+    assert page.count("data-meal='treat'") == 7  # a treat row on every day while placing
+    assert f"place={r.id}&amp;srv=26" in page or f"place={r.id}&srv=26" in page
+    plain = client.get("/app/plan").text
+    assert "Placing — tap a slot" not in plain and "data-meal='treat'" not in plain

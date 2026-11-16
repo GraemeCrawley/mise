@@ -50,6 +50,15 @@ class DayView:
     slots: list[SlotView]  # ordered by household.meals
 
 
+# Dessert/snack row: placeable like a meal, shown on a day only when it
+# holds something, never auto-fills leftovers, never counts as a meal.
+TREAT = "treat"
+
+
+def _valid_meals(household: Household) -> list[str]:
+    return [*household.meals, TREAT]
+
+
 def _household(db: Session) -> Household:
     """Single-tenant v1 — there's exactly one household. Materialise it
     lazily so an empty DB still works."""
@@ -106,7 +115,7 @@ def add_note(date: _date, meal: str, text: str, db: Session) -> PlanNote:
     if not text:
         raise ValueError("note text is empty")
     household = _household(db)
-    if meal not in household.meals:
+    if meal not in _valid_meals(household):
         raise ValueError(
             f"unknown meal {meal!r}; household.meals = {household.meals}"
         )
@@ -140,7 +149,7 @@ def place(
     if recipe is None:
         raise ValueError(f"recipe {recipe_id} not found")
     household = _household(db)
-    if meal not in household.meals:
+    if meal not in _valid_meals(household):
         raise ValueError(
             f"unknown meal {meal!r}; household.meals = {household.meals}"
         )
@@ -164,7 +173,7 @@ def place(
     db.add(session)
     db.flush()
 
-    n = _slots_to_fill(recipe, household, total_servings=servings_override)
+    n = 1 if meal == TREAT else _slots_to_fill(recipe, household, total_servings=servings_override)
     placed = 0
     cursor = start_date
     position = 1
@@ -206,7 +215,7 @@ def place_explicit(
         raise ValueError(f"recipe {recipe_id} not found")
     household = _household(db)
     for d, meal in slots:
-        if meal not in household.meals:
+        if meal not in _valid_meals(household):
             raise ValueError(
                 f"unknown meal {meal!r}; household.meals = {household.meals}"
             )
@@ -440,7 +449,9 @@ def get_view(start: _date, days: int, db: Session) -> list[DayView]:
     for i in range(days):
         d = start + timedelta(days=i)
         slots: list[SlotView] = []
-        for m in household.meals:
+        for m in _valid_meals(household):
+            if m == TREAT and (d, m) not in by_cell and (d, m) not in notes:
+                continue
             cell = by_cell.get((d, m))
             if cell is None:
                 slots.append(SlotView(

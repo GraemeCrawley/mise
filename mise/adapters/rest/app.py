@@ -44,7 +44,6 @@ from sqlmodel import Session, select
 from mise.db import get_session
 from mise.models import (
     CookingSession,
-    PlanNote,
     Feedback,
     Household,
     Ingredient,
@@ -789,6 +788,18 @@ def _shell(title: str, body: str, active: str = "library") -> str:
         // (Service-Worker-Allowed: / header lets it claim higher if needed).
         navigator.serviceWorker.register('{PREFIX}/sw.js', {{ scope: '{PREFIX}/' }})
           .catch((e) => console.warn('SW registration failed:', e));
+      }}
+      // Red number on the icon = unplanned meals in the next two days.
+      // Refreshed whenever the app comes to the front.
+      if ('setAppBadge' in navigator && !location.pathname.endsWith('/notify-test')) {{
+        const syncBadge = () => fetch('{PREFIX}/push/badge', {{ credentials: 'include', redirect: 'manual' }})
+          .then(r => r.ok ? r.json() : null)
+          .then(j => {{ if (!j) return; return j.count > 0 ? navigator.setAppBadge(j.count) : navigator.clearAppBadge(); }})
+          .catch(() => {{}});
+        syncBadge();
+        document.addEventListener('visibilitychange', () => {{ if (!document.hidden) syncBadge(); }});
+      }}
+      if ('serviceWorker' in navigator) {{
         navigator.serviceWorker.addEventListener('message', (event) => {{
           if (event.data && event.data.type === 'queue-flushed') {{
             const n = event.data.count;
@@ -1056,27 +1067,6 @@ def recipe_page(recipe_id: int, db: Session = Depends(get_session)) -> HTMLRespo
     if r is None:
         raise HTTPException(status_code=404)
 
-    # Upcoming slot occupancy for the add-to-plan modal.
-    today = _Date.today()
-    end = today + _Td(days=6)
-    occ_rows = db.exec(
-        select(SlotAssignment, CookingSession, Recipe)
-        .join(CookingSession, SlotAssignment.session_id == CookingSession.id)
-        .join(Recipe, CookingSession.recipe_id == Recipe.id)
-        .where(SlotAssignment.date >= today)
-        .where(SlotAssignment.date <= end)
-        .where(SlotAssignment.position == 1)
-    ).all()
-    occupied: dict[tuple[str, str], str] = {
-        (slot.date.isoformat(), slot.meal): rec.display_title()
-        for slot, _, rec in occ_rows
-    }
-    for n in db.exec(
-        select(PlanNote).where(PlanNote.date >= today).where(PlanNote.date <= end)
-    ).all():
-        occupied[(n.date.isoformat(), n.meal)] = n.text
-    _hh = db.exec(select(Household)).first()
-    per_slot = (_hh.default_servings_per_meal if _hh else None) or 2
 
     # Ingredients + steps.
     sect_blocks = []
@@ -1308,10 +1298,10 @@ def recipe_page(recipe_id: int, db: Session = Depends(get_session)) -> HTMLRespo
       <div id="scale-indicator" class="text-[11px] text-amber-700 mt-1 ml-1" hidden></div>
 
       <div class="flex gap-2 mt-4" style="position:relative;z-index:30;">
-        <button type="button" id="atp-open"
-                class="flex-1 bg-stone-900 hover:bg-stone-700 text-white font-medium py-3 rounded-2xl text-sm">
+        <a id="atp-open" href="{PREFIX}/app/plan?place={r.id}"
+                class="flex-1 bg-stone-900 hover:bg-stone-700 text-white font-medium py-3 rounded-2xl text-sm text-center">
           + Add to plan
-        </button>
+        </a>
         <a href="{PREFIX}/app/recipe/{r.id}/draft"
            class="card px-4 flex items-center justify-center text-sm text-amber-700 hover:bg-stone-50"
            title="Edit ingredients, steps, tags">✎ Edit</a>
@@ -1387,7 +1377,6 @@ def recipe_page(recipe_id: int, db: Session = Depends(get_session)) -> HTMLRespo
                   style="min-height: 5rem;">{_h(r.notes_markdown or '')}</textarea>
       </div>
 
-      {_add_to_plan_modal(r, occupied, per_slot)}
 
       <!-- Cook mode: scales text + holds the wake lock + turns time
            references in steps into tappable inline countdown timers. -->
@@ -1742,156 +1731,6 @@ def recipe_page(recipe_id: int, db: Session = Depends(get_session)) -> HTMLRespo
       </script>
     """
     return HTMLResponse(_shell(name, body, active="library"))
-
-
-def _add_to_plan_modal(
-    r: Recipe, occupied: dict[tuple[str, str], str], per_slot: int = 2
-) -> str:
-    """Cook-day picker — pick servings, tap ONE day+meal, and the
-    planner auto-fills leftovers forward (cook + leftovers) from the
-    servings math. This is the original simple flow; the old
-    multi-select 'pick every slot' grid was a wrong turn."""
-    today = _Date.today()
-    default_srv = r.servings or 4
-    day_rows: list[str] = []
-    for i in range(7):
-        d = today + _Td(days=i)
-        iso = d.isoformat()
-        label = "Today" if i == 0 else "Tomorrow" if i == 1 else d.strftime("%A")
-        sub = d.strftime("%a %b %-d") if i < 2 else d.strftime("%b %-d")
-        cells = []
-        for meal in ("breakfast", "lunch", "dinner"):
-            taken = occupied.get((iso, meal))
-            if taken:
-                cells.append(
-                    f"<button type='button' disabled class='atp-slot atp-taken'>"
-                    f"<span class='atp-meal-label'>{meal[0].upper()}</span>"
-                    f"<span class='atp-taken-name'>{_h(taken)}</span>"
-                    f"</button>"
-                )
-            else:
-                cells.append(
-                    f"<button type='button' class='atp-slot atp-open' "
-                    f"data-date='{iso}' data-meal='{meal}'>"
-                    f"<span class='atp-meal-label'>{meal[0].upper()}</span>"
-                    f"<span class='atp-meal-sub'>{meal}</span>"
-                    f"</button>"
-                )
-        day_rows.append(
-            f"<div class='atp-day-row'>"
-            f"  <div class='atp-day-label'>"
-            f"    <div class='atp-day-name'>{label}</div>"
-            f"    <div class='atp-day-sub'>{sub}</div>"
-            f"  </div>"
-            f"  <div class='atp-day-slots'>{''.join(cells)}</div>"
-            f"</div>"
-        )
-    return f"""
-<div id="atp-modal" class="atp-modal" role="dialog" aria-modal="true">
-  <div class="atp-sheet">
-    <div class="flex items-baseline justify-between mb-2">
-      <h2 class="serif text-xl font-medium tracking-tight">Add to plan</h2>
-      <button type="button" id="atp-close" class="text-stone-400 text-3xl leading-none p-2 -mt-2 -mr-2">×</button>
-    </div>
-    <div class="flex items-center justify-between gap-3 mb-3">
-      <span class="serif italic font-medium text-stone-900 truncate">{_h(r.display_title())}</span>
-      <div class="inline-flex items-center border border-stone-200 rounded-lg overflow-hidden bg-white shrink-0">
-        <button type="button" id="atp-srv-dec" class="px-3 py-1.5 text-stone-700 hover:bg-stone-100 border-r border-stone-200">−</button>
-        <span class="px-3 py-1.5 min-w-[3rem] text-center text-sm">
-          <span id="atp-srv-val" class="font-semibold tabular-nums">{default_srv}</span><span class="text-stone-400"> srv</span>
-        </span>
-        <button type="button" id="atp-srv-inc" class="px-3 py-1.5 text-stone-700 hover:bg-stone-100 border-l border-stone-200">+</button>
-      </div>
-    </div>
-    <div class="text-[11px] font-semibold text-stone-700 uppercase tracking-wider mb-2">
-      Pick a day to cook — <span id="atp-fill-hint" class="text-stone-500 normal-case font-normal tracking-normal"></span>
-    </div>
-    <div class="atp-days">{''.join(day_rows)}</div>
-    <p id="atp-status" class="text-sm text-center text-stone-500 mt-3 min-h-[1.25em]"></p>
-  </div>
-</div>
-<style>
-  #atp-modal {{ display: none; position: fixed; inset: 0; z-index: 100; background: rgba(28,25,23,0.45); align-items: flex-end; justify-content: center; }}
-  #atp-modal.is-open {{ display: flex; }}
-  #atp-modal .atp-sheet {{ background: white; border-radius: 1.25rem 1.25rem 0 0; width: 100%; max-width: 28rem; max-height: 90vh; overflow-y: auto; padding: 1.25rem 1.25rem calc(1.5rem + env(safe-area-inset-bottom)); box-shadow: 0 -16px 48px -8px rgba(0,0,0,0.22); }}
-  #atp-modal .atp-days {{ display: flex; flex-direction: column; gap: 0.5rem; }}
-  #atp-modal .atp-day-row {{ display: flex; align-items: stretch; gap: 0.6rem; }}
-  #atp-modal .atp-day-label {{ width: 5.5rem; flex-shrink: 0; display: flex; flex-direction: column; justify-content: center; }}
-  #atp-modal .atp-day-name {{ font-family: 'Fraunces', Georgia, serif; font-weight: 500; font-size: 0.95rem; line-height: 1.1; }}
-  #atp-modal .atp-day-sub {{ font-size: 0.7rem; color: #a8a29e; margin-top: 0.05rem; }}
-  #atp-modal .atp-day-slots {{ display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 0.35rem; flex: 1; min-width: 0; }}
-  #atp-modal .atp-slot {{ text-align: center; padding: 0.45rem 0.4rem; border-radius: 0.55rem; border: 1px solid #e7e5e4; background: white; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 0.05rem; font-size: 13px; min-width: 0; }}
-  #atp-modal .atp-slot.atp-open:hover, #atp-modal .atp-slot.atp-open:active {{ background: #fffbeb; border-color: #fcd34d; }}
-  /* Selected = amber filled — multi-select pattern, not immediate submit. */
-  #atp-modal .atp-slot.is-picked {{ background: #FDE68A; border-color: #F59E0B; }}
-  #atp-modal .atp-slot.is-picked .atp-meal-label {{ color: #78350F; }}
-  #atp-modal .atp-meal-label {{ font-weight: 700; color: #1c1917; font-size: 13px; letter-spacing: 0.05em; }}
-  #atp-modal .atp-meal-sub {{ font-size: 0.6rem; color: #a8a29e; text-transform: uppercase; letter-spacing: 0.08em; }}
-  #atp-modal .atp-taken {{ background: #f5f5f4; cursor: not-allowed; opacity: 0.65; overflow: hidden; }}
-  #atp-modal .atp-taken .atp-meal-label {{ color: #78716c; }}
-  #atp-modal .atp-taken-name {{ font-family: 'Fraunces', Georgia, serif; font-style: italic; font-size: 0.65rem; color: #57534e; line-height: 1.1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 100%; }}
-</style>
-<script>
-(function() {{
-  const RECIPE_ID = {r.id};
-  const openBtn = document.getElementById('atp-open');
-  const modal = document.getElementById('atp-modal');
-  const closeBtn = document.getElementById('atp-close');
-  const status = document.getElementById('atp-status');
-  const srvVal = document.getElementById('atp-srv-val');
-  const srvDec = document.getElementById('atp-srv-dec');
-  const srvInc = document.getElementById('atp-srv-inc');
-  const fab = document.getElementById('fb-fab');
-  let servings = {default_srv};
-  const PER_SLOT = {per_slot};
-  const fillHint = document.getElementById('atp-fill-hint');
-  function fillsFor(s) {{ return Math.max(1, Math.ceil(s / PER_SLOT)); }}
-  function refreshHint() {{
-    const n = fillsFor(servings);
-    fillHint.textContent = `fills ${{n}} ${{n === 1 ? 'meal' : 'meals'}} (${{PER_SLOT}}/meal)`;
-  }}
-  function show() {{ modal.classList.add('is-open'); if (fab) fab.style.display = 'none'; status.textContent = ''; refreshHint(); }}
-  function hide() {{ modal.classList.remove('is-open'); if (fab) fab.style.display = ''; }}
-  openBtn.addEventListener('click', show);
-  closeBtn.addEventListener('click', hide);
-  modal.addEventListener('click', (e) => {{ if (e.target === modal) hide(); }});
-  document.addEventListener('keydown', (e) => {{ if (e.key === 'Escape') hide(); }});
-  srvDec.addEventListener('click', () => {{ servings = Math.max(1, servings - 1); srvVal.textContent = servings; refreshHint(); }});
-  srvInc.addEventListener('click', () => {{ servings = Math.min(40, servings + 1); srvVal.textContent = servings; refreshHint(); }});
-  // Single-pick: tap ONE day+meal = the cook slot. The planner
-  // auto-fills leftovers forward from the servings math (/plan/place).
-  let placing = false;
-  document.querySelectorAll('#atp-modal .atp-slot.atp-open').forEach(btn => {{
-    btn.addEventListener('click', async () => {{
-      if (placing) return;
-      placing = true;
-      document.querySelectorAll('#atp-modal .atp-slot.is-picked').forEach(b => b.classList.remove('is-picked'));
-      btn.classList.add('is-picked');
-      const n = fillsFor(servings);
-      status.textContent = `Adding — fills ${{n}} ${{n === 1 ? 'meal' : 'meals'}}…`;
-      try {{
-        const r = await fetch('{PREFIX}/plan/place', {{
-          method: 'POST',
-          headers: {{ 'Content-Type': 'application/json' }},
-          body: JSON.stringify({{
-            recipe_id: RECIPE_ID, date: btn.dataset.date,
-            meal: btn.dataset.meal, servings,
-          }}),
-        }});
-        const data = await r.json();
-        if (!r.ok) throw new Error(data.detail || ('HTTP ' + r.status));
-        status.textContent = 'Added!';
-        setTimeout(() => {{ location.href = '{PREFIX}/app/plan'; }}, 400);
-      }} catch (e) {{
-        status.textContent = 'Failed: ' + e.message;
-        btn.classList.remove('is-picked');
-        placing = false;
-      }}
-    }});
-  }});
-}})();
-</script>
-"""
 
 
 # =============================================================================
@@ -2336,10 +2175,69 @@ def recipe_draft_page(recipe_id: int, db: Session = Depends(get_session)) -> HTM
 # Plan
 # =============================================================================
 
+def _placing_banner(r: Recipe, srv: int, per_slot: int) -> str:
+    """Sticky 'placing this recipe' bar for the plan page. Tapping an empty
+    slot places it there (capture-phase handler beats the add-picker)."""
+    name = _h(r.display_title())
+    emoji = _recipe_emoji(r.name_english or r.name_original, r.emoji)
+    return f"""
+      <div id="placing" class="card px-4 py-3 mt-4" style="position:sticky;top:0.5rem;z-index:40;background:#FFFBEB;border:1px solid #FCD34D;">
+        <div class="flex items-center gap-3">
+          <div class="shrink-0 text-2xl">{emoji}</div>
+          <div class="flex-1 min-w-0">
+            <div class="uppercase text-amber-700 font-semibold" style="font-size:10px;letter-spacing:0.15em">Placing — tap a slot</div>
+            <div class="serif text-lg font-medium truncate">{name}</div>
+          </div>
+          <a href="{PREFIX}/app/recipe/{r.id}" class="text-sm text-stone-500 px-2 py-1">Cancel</a>
+        </div>
+        <div class="flex items-center gap-3 mt-2">
+          <div class="flex items-center border border-stone-200 rounded-lg bg-white shrink-0" style="white-space:nowrap">
+            <button type="button" id="pl-dec" class="px-3 py-1 text-lg leading-none" aria-label="Fewer servings">−</button>
+            <span class="px-2 text-sm"><b id="pl-srv">{srv}</b> srv</span>
+            <button type="button" id="pl-inc" class="px-3 py-1 text-lg leading-none" aria-label="More servings">+</button>
+          </div>
+          <span id="pl-fills" class="text-xs text-stone-500"></span>
+        </div>
+        <div id="pl-status" class="text-sm mt-1" style="color:#b91c1c"></div>
+      </div>
+      <script>
+      (function() {{
+        const RID = {r.id}, PER = {per_slot};
+        let srv = {srv}, busy = false;
+        const $ = id => document.getElementById(id);
+        const fills = () => {{ const n = Math.max(1, Math.ceil(srv / PER)); $('pl-fills').textContent =
+          'fills ' + n + (n === 1 ? ' meal' : ' meals') + ' from the slot you tap (a treat fills just its day)'; }};
+        const keepUrl = () => {{ const u = new URL(location.href); u.searchParams.set('srv', srv); history.replaceState(null, '', u);
+          document.querySelectorAll('a[href*="place="]').forEach(a => {{ const h = new URL(a.href); h.searchParams.set('srv', srv); a.href = h; }}); }};
+        $('pl-dec').addEventListener('click', () => {{ srv = Math.max(1, srv - 1); $('pl-srv').textContent = srv; fills(); keepUrl(); }});
+        $('pl-inc').addEventListener('click', () => {{ srv = Math.min(60, srv + 1); $('pl-srv').textContent = srv; fills(); keepUrl(); }});
+        fills();
+        document.addEventListener('click', async (e) => {{
+          const btn = e.target.closest('.slot-add');
+          if (!btn) return;
+          e.preventDefault(); e.stopPropagation();
+          if (busy) return;
+          busy = true; $('pl-status').textContent = '';
+          btn.style.background = '#FEF3C7';
+          try {{
+            const r = await fetch('{PREFIX}/plan/place', {{ method: 'POST', headers: {{ 'Content-Type': 'application/json' }},
+              body: JSON.stringify({{ recipe_id: RID, date: btn.dataset.date, meal: btn.dataset.meal, servings: srv }}) }});
+            const d = await r.json().catch(() => ({{}}));
+            if (!r.ok) throw new Error(d.detail || ('Error ' + r.status));
+            const u = new URL(location.href); u.searchParams.delete('place'); u.searchParams.delete('srv');
+            location.href = u;
+          }} catch (err) {{ $('pl-status').textContent = 'Could not place it: ' + err.message; btn.style.background = ''; busy = false; }}
+        }}, true);
+      }})();
+      </script>"""
+
+
 @router.get("/app/plan", response_class=HTMLResponse)
 def plan_page(
     db: Session = Depends(get_session),
     start: str = "",
+    place: int | None = None,
+    srv: int | None = None,
 ) -> HTMLResponse:
     if start:
         try:
@@ -2353,6 +2251,16 @@ def plan_page(
     view = planner_service.get_view(start_date, 8, db)
     next_day = {a.date: b for a, b in zip(view, view[1:])}
     view = view[:7]
+
+    # Placing mode (from a recipe's "Add to plan"): banner on top, every
+    # empty slot — including a Treat row on each day — assigns on tap.
+    placing = db.get(Recipe, place) if place else None
+    _hh = db.exec(select(Household)).first()
+    per_slot_default = (_hh.default_servings_per_meal if _hh else None) or 2
+    place_qs = ""
+    if placing is not None:
+        srv = max(1, min(60, srv or placing.servings or 2))
+        place_qs = f"&place={placing.id}&srv={srv}"
 
     day_blocks: list[str] = []
     for d in view:
@@ -2394,6 +2302,8 @@ def plan_page(
                 )
                 if (s.position or 1) > 1:
                     note = f"<div class='text-xs text-stone-400 mt-0.5'>leftover {s.position}/{s.total_slots}</div>"
+                elif s.meal == "treat":
+                    note = f"<div class='text-xs text-stone-400 mt-0.5'>{s.recipe_servings or ''} srv · dessert or snack, no leftovers</div>"
                 elif s.recipe_servings and s.total_slots:
                     note = f"<div class='text-xs text-stone-400 mt-0.5'>{s.recipe_servings} srv · fills {s.total_slots} {'meal' if s.total_slots == 1 else 'meals'}</div>"
                 else:
@@ -2494,6 +2404,17 @@ def plan_page(
                     f"</a>"
                 )
 
+        if placing is not None and not any(sl.meal == "treat" for sl in d.slots):
+            slot_rows.append(
+                f"<button type='button' class='slot-add w-full flex items-center gap-3 px-5 py-2 border-b border-stone-100 last:border-0 text-left' "
+                f"data-empty='1' data-date='{d.date.isoformat()}' data-meal='treat'>"
+                f"  <div class='shrink-0 w-10 h-10 rounded-lg border-2 border-dashed border-amber-300 flex items-center justify-center text-amber-700 text-lg font-medium drop-thumb'>+</div>"
+                f"  <span class='uppercase text-stone-400 font-semibold shrink-0' style='font-size:10px;letter-spacing:0.1em;width:4.25rem;white-space:nowrap;'>treat</span>"
+                f"  <div class='flex-1 min-w-0'><span class='text-amber-800 serif italic text-base font-medium'>Dessert or snack</span>"
+                f"<div class='text-xs text-stone-400 mt-0.5'>this day only, no leftovers</div></div>"
+                f"</button>"
+            )
+
         is_today = d.date == _Date.today()
         today_badge = (
             " <span class='text-[10px] uppercase tracking-wider bg-amber-100 text-amber-800 font-semibold px-2 py-0.5 rounded-full'>Today</span>"
@@ -2540,12 +2461,13 @@ def plan_page(
       <div class="flex items-end justify-between gap-3">
         <h1 class="serif text-4xl font-medium tracking-tight leading-none">The <em class="text-stone-500">plan</em>.</h1>
         <div class="flex items-center gap-1 text-sm">
-          <a href="{PREFIX}/app/plan?start={prev_iso}" class="w-8 h-8 rounded-lg border border-stone-200 bg-white text-stone-500 hover:bg-stone-100 inline-flex items-center justify-center">←</a>
-          <a href="{PREFIX}/app/plan?start={today_iso}" class="px-3 h-8 rounded-lg border border-stone-200 bg-white text-stone-700 hover:bg-stone-100 inline-flex items-center text-sm">today</a>
-          <a href="{PREFIX}/app/plan?start={next_iso}" class="w-8 h-8 rounded-lg border border-stone-200 bg-white text-stone-500 hover:bg-stone-100 inline-flex items-center justify-center">→</a>
+          <a href="{PREFIX}/app/plan?start={prev_iso}{place_qs}" class="w-8 h-8 rounded-lg border border-stone-200 bg-white text-stone-500 hover:bg-stone-100 inline-flex items-center justify-center">←</a>
+          <a href="{PREFIX}/app/plan?start={today_iso}{place_qs}" class="px-3 h-8 rounded-lg border border-stone-200 bg-white text-stone-700 hover:bg-stone-100 inline-flex items-center text-sm">today</a>
+          <a href="{PREFIX}/app/plan?start={next_iso}{place_qs}" class="w-8 h-8 rounded-lg border border-stone-200 bg-white text-stone-500 hover:bg-stone-100 inline-flex items-center justify-center">→</a>
         </div>
       </div>
       <p class="text-sm text-stone-500 mt-2">{start_date.strftime('%b %-d')} — {(start_date + _Td(days=6)).strftime('%b %-d')}</p>
+      {_placing_banner(placing, srv or 0, per_slot_default) if placing is not None else ''}
 
       <div class="space-y-3 mt-6">
         {''.join(day_blocks)}
@@ -2616,7 +2538,7 @@ def plan_page(
               <button type="button" class="ps-close text-stone-400 text-3xl leading-none p-2 -mt-2 -mr-2">×</button>
             </div>
             <p class="text-sm text-stone-500 mb-3">Pick a new day + meal slot.</p>
-            <div id="move-grid" class="grid grid-cols-3 gap-2"></div>
+            <div id="move-grid" class="grid grid-cols-4 gap-2"></div>
           </div>
         </div>
       </div>
@@ -2891,7 +2813,7 @@ def plan_page(
             const iso = d.toISOString().slice(0, 10);
             const label = i === 0 ? 'Today' : i === 1 ? 'Tomorrow' :
               d.toLocaleDateString(undefined, {{ weekday: 'short', month: 'short', day: 'numeric' }});
-            for (const meal of ['breakfast', 'lunch', 'dinner']) {{
+            for (const meal of ['breakfast', 'lunch', 'dinner', 'treat']) {{
               const isSelf = iso === ctx.date && meal === ctx.meal;
               cells.push(
                 `<button type="button" class="move-cell border border-stone-200 rounded-lg p-2 text-left bg-white hover:bg-amber-50 hover:border-amber-300 ${{isSelf ? 'opacity-40 cursor-not-allowed' : ''}}" `
@@ -5117,6 +5039,8 @@ def tools_page() -> HTMLResponse:
          "Recipes marked rejected during review."),
         ("New recipe",     f"{PREFIX}/app/add",
          "Paste, dictate, or link a recipe — one box does it all."),
+        ("Notification test", f"{PREFIX}/app/notify-test",
+         "Turn on notifications for this phone and try every kind."),
         ("Feedback inbox", f"{PREFIX}/app/inbox",
          "Notes from the floating button."),
         ("Parse trace",    f"{PREFIX}/app/tools/parse-trace",

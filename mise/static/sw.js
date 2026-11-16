@@ -13,7 +13,7 @@
  *     forces a refresh on the next activate.
  */
 
-const CACHE_NAME  = 'mise-app-v21';
+const CACHE_NAME  = 'mise-app-v28';
 const QUEUE_DB    = 'mise-sync-v1';
 const QUEUE_STORE = 'pending';
 
@@ -49,6 +49,8 @@ self.addEventListener('fetch', (event) => {
   // /preview/, /docs, etc.) to the network.
   if (url.origin !== self.location.origin) return;
   const path = url.pathname;
+  // Push API calls must hit the network directly: never queue or cache.
+  if (path.startsWith('/mise/push/')) return;
   const isAppPath = path.startsWith('/mise/app') || path.startsWith('/mise/static/');
   const isMutation = req.method !== 'GET' && req.method !== 'HEAD';
   if (!isAppPath && !isMutation) return;
@@ -229,3 +231,90 @@ async function drain() {
     tx.onerror = () => reject(tx.error);
   });
 }
+
+// ----- push notifications ----------------------------------------------------
+// Two payload shapes arrive here:
+//  - Mise's own JSON {title, body, url, tag, actions, badge, test_id, kind, …}
+//  - Apple's Declarative Web Push {web_push: 8030, notification: {…}}. iOS 18.4+
+//    shows these itself; the worker only sees them when `mutable` is set, or on
+//    browsers without declarative support (then we show it ourselves).
+// The test id travels in the tap URL (?ntest=) because iOS has been seen not
+// to fire notificationclick, so the opened page is the reliable tap signal.
+
+function testFromUrl(u) {
+  try { const q = new URL(u, self.location.origin).searchParams; return { id: q.get('ntest'), kind: q.get('kind') }; }
+  catch (e) { return {}; }
+}
+
+async function pushAck(testId, kind, stage, detail) {
+  if (!testId) return;
+  try {
+    const sub = await self.registration.pushManager.getSubscription();
+    await fetch('/mise/push/ack', {
+      method: 'POST', credentials: 'include', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ test_id: testId, kind, stage, detail, endpoint: sub && sub.endpoint }),
+    });
+  } catch (e) { /* login expired or offline: the log just misses this step */ }
+}
+
+self.addEventListener('push', (event) => {
+  event.waitUntil((async () => {
+    let data = {};
+    try { data = event.data ? event.data.json() : {}; }
+    catch (e) { data = { title: 'Mise', body: event.data ? event.data.text() : '' }; }
+
+    if (data.web_push === 8030 && data.notification) {
+      const n = data.notification;
+      const t = testFromUrl(n.navigate);
+      if (event.notification) {
+        // iOS declarative + mutable: the system proposed this notification;
+        // rewriting it proves the worker can edit declarative messages.
+        await self.registration.showNotification('✏️ ' + (n.title || 'Mise'), {
+          body: n.body || '', data: { url: n.navigate, test_id: t.id, kind: t.kind } });
+        await pushAck(t.id, t.kind, 'received', 'declarative, edited by the worker');
+      } else {
+        await self.registration.showNotification(n.title || 'Mise', {
+          body: n.body || '', data: { url: n.navigate, test_id: t.id, kind: t.kind } });
+        if (n.app_badge != null && self.navigator.setAppBadge) {
+          try { await self.navigator.setAppBadge(Number(n.app_badge)); } catch (e) {}
+        }
+        await pushAck(t.id, t.kind, 'received', 'declarative shown by the worker (phone did not handle it natively)');
+      }
+      return;
+    }
+
+    const opts = { body: data.body || '', data: { url: data.url, test_id: data.test_id, kind: data.kind } };
+    if (data.tag) opts.tag = data.tag;
+    if (data.renotify) opts.renotify = true;
+    if (data.silent) opts.silent = true;
+    if (data.actions) opts.actions = data.actions;
+    if (data.image) opts.image = data.image;
+    let badgeNote = '';
+    if (data.badge != null) {
+      if (self.navigator.setAppBadge) {
+        try {
+          if (data.badge) { await self.navigator.setAppBadge(data.badge); badgeNote = ', badge set to ' + data.badge; }
+          else if (data.badge_zero) { await self.navigator.setAppBadge(0); badgeNote = ', setAppBadge(0) ran'; }
+          else { await self.navigator.clearAppBadge(); badgeNote = ', clearAppBadge() ran'; }
+        } catch (e) { badgeNote = ', badge failed: ' + e; }
+      } else { badgeNote = ', badge not supported in worker'; }
+    }
+    await self.registration.showNotification(data.title || 'Mise', opts);
+    await pushAck(data.test_id, data.kind, 'received', 'shown by the worker' + badgeNote);
+  })());
+});
+
+self.addEventListener('notificationclick', (event) => {
+  const d = event.notification.data || {};
+  event.notification.close();
+  event.waitUntil((async () => {
+    await pushAck(d.test_id, d.kind, 'clicked', event.action ? 'button: ' + event.action : 'tapped the notification');
+    let url = d.url || '/mise/app/';
+    if (event.action) url += (url.includes('?') ? '&' : '?') + 'action=' + encodeURIComponent(event.action);
+    const wins = await self.clients.matchAll({ type: 'window', includeUncontrolled: true });
+    for (const w of wins) {
+      try { await w.focus(); if ('navigate' in w) { await w.navigate(url); return; } } catch (e) {}
+    }
+    await self.clients.openWindow(url);
+  })());
+});

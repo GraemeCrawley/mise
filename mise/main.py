@@ -18,6 +18,7 @@ from prometheus_client import make_asgi_app
 
 from mise import __version__
 from mise.adapters.rest import admin, app as consumer_app, planner, preview, recipes, shopping
+from mise.adapters.rest import push as push_routes
 
 log = logging.getLogger("mise")
 
@@ -51,6 +52,9 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
             from mise.services.snapshot import start_scheduler
 
             scheduler = start_scheduler()
+            from mise.services.reminders import register as register_reminders
+
+            register_reminders(scheduler)
         except Exception as e:
             log.warning("snapshot scheduler failed to start: %s", e)
 
@@ -196,6 +200,7 @@ app.include_router(preview.router)
 app.include_router(shopping.router)
 app.include_router(planner.router)
 app.include_router(consumer_app.router)
+app.include_router(push_routes.router)
 
 
 @app.get("/healthz")
