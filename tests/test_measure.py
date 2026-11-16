@@ -12,7 +12,7 @@ def test_formats_kitchen_fractions():
 def test_converts_within_a_dimension():
     assert Measure.of(1, "cup").to("ml").text() == "237 ml"
     assert Measure.of(3, "tsp").to("tbsp").text() == "1 tbsp"
-    assert [m.unit for m in Measure.of(100, "g").alternatives()] == ["kg", "oz", "lb"]
+    assert [m.unit for m in Measure.of(100, "g").alternatives()][:3] == ["kg", "oz", "lb"]
 
 
 def test_counts_and_odd_units_do_not_convert():
@@ -36,10 +36,11 @@ def test_volume_and_weight_convert_with_a_known_ingredient():
     assert "data-density" in milk.html()
 
 
-def test_longest_ingredient_name_wins_and_unknown_gets_no_weight():
+def test_longest_ingredient_name_wins_and_unknown_uses_water():
     from mise.services.measure import density_for
     assert round(density_for("coconut milk") * 236.588) == 226
     assert round(density_for("light brown sugar") * 236.588) == 213
     assert density_for("unsalted butter") == density_for("butter")
     assert density_for("gochujang") is None
-    assert "g" not in [m.unit for m in Measure.of(1, "cup", "gochujang").alternatives()]
+    assert Measure.of(1, "cup", "gochujang").to("g").text() == "237 g"
+    assert Measure.of(2, "ea", "eggs").density is None

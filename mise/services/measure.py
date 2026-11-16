@@ -38,7 +38,8 @@ _ALIASES = {
 # Grams per US cup, for converting between volume and weight. Sources:
 # King Arthur ingredient weight chart and USDA FoodData Central. The
 # longest name that appears in the ingredient wins ("coconut milk" beats
-# "milk", "brown sugar" beats "sugar"). Unknown ingredients get no g/oz.
+# "milk", "brown sugar" beats "sugar"). Unknown ingredients use water's
+# weight (1 g per ml) as a rough stand-in; the app marks these with "~".
 GRAMS_PER_CUP: dict[str, float] = {
     "water": 237, "milk": 242, "buttermilk": 242, "cream": 238, "half and half": 242,
     "sour cream": 230, "yogurt": 245, "greek yogurt": 227, "condensed milk": 306,
@@ -61,6 +62,8 @@ GRAMS_PER_CUP: dict[str, float] = {
     # Longer names that would otherwise match a shorter, wrong entry.
     "coconut oil": 218, "cream cheese": 232, "green beans": 110, "ice cream": 132,
 }
+
+WATER = 1.0  # g per ml
 
 _GLYPHS = ((0.125, "⅛"), (0.25, "¼"), (1 / 3, "⅓"), (0.375, "⅜"), (0.5, "½"),
            (0.625, "⅝"), (2 / 3, "⅔"), (0.75, "¾"), (0.875, "⅞"))
@@ -114,7 +117,9 @@ class Measure:
 
     @classmethod
     def of(cls, qty: float | int | None, unit: str | None, ingredient: str | None = None) -> Measure:
-        return cls(float(qty or 0), normalize_unit(unit), density_for(ingredient))
+        u = normalize_unit(unit)
+        density = (density_for(ingredient) or WATER) if u in UNITS else None
+        return cls(float(qty or 0), u, density)
 
     @property
     def dimension(self) -> str | None:

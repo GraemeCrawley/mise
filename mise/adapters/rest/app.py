@@ -234,7 +234,7 @@ _APP_CSS = f"""
 <link rel="apple-touch-icon" href="{PREFIX}/static/icon-180.png">
 <link rel="icon" type="image/svg+xml" href="{PREFIX}/static/icon.svg">
 <script>window.MISE_UNITS = {units_json()};</script>
-<script src="{PREFIX}/static/measure.js?v=2" defer></script>
+<script src="{PREFIX}/static/measure.js?v=3" defer></script>
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="theme-color" content="#FAF7F2">
