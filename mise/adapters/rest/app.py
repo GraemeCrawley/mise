@@ -2175,6 +2175,182 @@ def recipe_draft_page(recipe_id: int, db: Session = Depends(get_session)) -> HTM
 # Plan
 # =============================================================================
 
+_STATUS_LABEL = {"home": "🏠 Home", "away": "✈️ Away", "out": "🍴 Out", "flex": "〰️ Flex"}
+
+
+def _gap_rows(gaps: list) -> str:
+    rows = []
+    for d, meal in gaps:
+        rows.append(
+            f"<div class='gap-row flex items-center gap-2 py-2 border-b border-stone-100 last:border-0'>"
+            f"  <div class='flex-1 min-w-0'><div class='font-medium' style='white-space:nowrap'>{d.strftime('%a')} {meal}</div>"
+            f"  <div class='text-xs text-stone-400'>{d.strftime('%b %-d')}</div></div>"
+            f"  <a href='{PREFIX}/app/plan?start={d.isoformat()}' class='text-sm text-amber-800 px-2 py-1'>Pick</a>"
+            + "".join(
+                f"<button type='button' class='gap-chip border border-stone-300 rounded-full px-2 py-1 text-xs bg-white' "
+                f"data-date='{d.isoformat()}' data-meal='{meal}' data-status='{k}'>{_STATUS_LABEL[k]}</button>"
+                for k in ("away", "out", "flex"))
+            + "</div>")
+    return "".join(rows) or "<div class='text-sm text-emerald-700 py-2'>All covered ✓</div>"
+
+
+@router.get("/app/plan/session", response_class=HTMLResponse)
+def plan_session_page(db: Session = Depends(get_session)) -> HTMLResponse:
+    from mise.services import weekplan
+    today = _Date.today()
+    rest = weekplan.rest_of_week(today)
+    nw = weekplan.next_week(today)
+    rest_gaps = weekplan.uncovered(db, rest) if rest else []
+    next_view = planner_service.get_view(nw[0], 7, db)
+    prep_default = weekplan.default_prep_day(db, nw)
+
+    grid_rows = []
+    for day in next_view:
+        cells = []
+        for meal in weekplan.MEALS:
+            s = next(x for x in day.slots if x.meal == meal)
+            if s.recipe_id is not None:
+                cells.append(f"<div class='wk-cell rounded-lg px-2 py-2 text-xs text-stone-600 truncate' style='background:#F5F5F4'>{_h(s.recipe_name)}</div>")
+                continue
+            st = weekplan.status_of(s.note) or "home"
+            if st == "note":
+                cells.append(f"<div class='wk-cell rounded-lg px-2 py-2 text-xs text-stone-600 truncate' style='background:#F5F5F4'>📝 {_h(s.note)}</div>")
+                continue
+            cells.append(
+                f"<button type='button' class='wk-cell wk-toggle rounded-lg px-2 py-2 text-sm border border-stone-200 bg-white' "
+                f"data-date='{s.date.isoformat()}' data-meal='{meal}' data-status='{st}'>{_STATUS_LABEL[st]}</button>")
+        grid_rows.append(
+            f"<div class='grid gap-2 items-center' style='grid-template-columns:5.5rem 1fr 1fr'>"
+            f"<div><div class='font-medium text-sm'>{day.date.strftime('%A')}</div><div class='text-xs text-stone-400'>{day.date.strftime('%b %-d')}</div></div>"
+            f"{''.join(cells)}</div>")
+
+    recipes = db.exec(select(Recipe).where(Recipe.archived == False)).all()  # noqa: E712
+    recipes = sorted(recipes, key=lambda r: ("Favourites" not in (r.tags or []), r.display_title().lower()))
+    options = "".join(
+        f"<option value='{r.id}' data-srv='{r.servings or 2}'>{'♥ ' if 'Favourites' in (r.tags or []) else ''}{_h(r.display_title())}</option>"
+        for r in recipes if r.servings)
+    prep_opts = "".join(
+        f"<option value='{d.isoformat()}' {'selected' if d == prep_default else ''}>{d.strftime('%A %b %-d')}</option>" for d in nw)
+    next_gaps = weekplan.uncovered(db, nw)
+
+    def pick(meal: str, hint: str) -> str:
+        return f"""
+        <label class="block text-sm text-stone-600 mt-3">{meal.title()} recipe <span class="text-xs text-stone-400">{hint}</span></label>
+        <div class="flex gap-2 mt-1">
+          <select id="ps-{meal}" class="flex-1 min-w-0 border border-stone-300 rounded-lg px-2 py-2 bg-white text-base">
+            <option value="">None</option>{options}</select>
+          <input id="ps-{meal}-srv" type="number" min="1" max="60" inputmode="numeric" class="w-16 border border-stone-300 rounded-lg px-2 py-2 text-base" aria-label="{meal} servings">
+        </div>"""
+
+    body = f"""
+      <div class="mb-1 text-[10px] uppercase tracking-[0.25em] text-stone-400">Weekly planning</div>
+      <h1 class="serif text-4xl font-medium tracking-tight leading-none">Plan the <em class="text-stone-500">week</em>.</h1>
+      <p class="text-sm text-stone-500 mt-2">Rest of this week first, then next week ({nw[0].strftime('%b %-d')} – {nw[-1].strftime('%b %-d')}).</p>
+
+      <div class="card p-4 mt-5">
+        <div class="serif text-lg font-medium">1 · Rest of this week</div>
+        <p class="text-xs text-stone-500 mt-1">Empty lunches and dinners before Monday. Pick a recipe, or mark them.</p>
+        <div class="mt-2">{_gap_rows(rest_gaps) if rest else "<div class='text-sm text-stone-500 py-2'>It's Sunday — straight to next week.</div>"}</div>
+      </div>
+
+      <div class="card p-4 mt-4">
+        <div class="serif text-lg font-medium">2 · Who's home next week</div>
+        <p class="text-xs text-stone-500 mt-1">Tap a meal to switch Home → Away → Out → Flex. Away and out meals get no leftovers and no reminders.</p>
+        <div class="grid gap-2 mt-3 text-xs text-stone-400 uppercase" style="grid-template-columns:5.5rem 1fr 1fr;letter-spacing:0.1em"><span></span><span>Lunch</span><span>Dinner</span></div>
+        <div class="space-y-2 mt-1">{''.join(grid_rows)}</div>
+      </div>
+
+      <div class="card p-4 mt-4">
+        <div class="serif text-lg font-medium">3 · Prep day and its two meals</div>
+        <label class="block text-sm text-stone-600 mt-2" for="ps-day">Prep day</label>
+        <select id="ps-day" class="mt-1 w-full border border-stone-300 rounded-lg px-2 py-2 bg-white text-base">{prep_opts}</select>
+        {pick("lunch", "· starts the next day's lunch")}
+        {pick("dinner", "· starts that evening")}
+        <p id="ps-fills" class="text-xs text-stone-500 mt-2"></p>
+        <button type="button" id="ps-fill" class="mt-3 w-full text-white font-medium py-3 rounded-xl" style="background:#b45309">Fill the week</button>
+        <div id="ps-msg" class="text-sm mt-2"></div>
+      </div>
+
+      <div class="card p-4 mt-4" id="left">
+        <div class="serif text-lg font-medium">4 · Still uncovered next week</div>
+        <p class="text-xs text-stone-500 mt-1">Pick a recipe, or mark them so reminders leave them alone.</p>
+        <div class="mt-2">{_gap_rows(next_gaps)}</div>
+      </div>
+
+      <div class="grid grid-cols-2 gap-2 mt-4">
+        <a href="{PREFIX}/app/plan?start={nw[0].isoformat()}" class="card text-center py-3 text-sm">See next week</a>
+        <a href="{PREFIX}/app/shop" class="card text-center py-3 text-sm matte-emerald">Shopping list →</a>
+      </div>
+      <div style="height:6rem"></div>
+      <script>
+      (function() {{
+        const P = '{PREFIX}', PER = {(db.exec(select(Household)).first() or Household()).default_servings_per_meal or 2};
+        const LABEL = {_json.dumps(_STATUS_LABEL)};
+        const ORDER = ['home', 'away', 'out', 'flex'];
+        const post = async (path, body) => {{
+          const r = await fetch(P + path, {{ method: 'POST', headers: {{ 'Content-Type': 'application/json' }}, body: JSON.stringify(body) }});
+          const d = await r.json().catch(() => ({{}}));
+          if (!r.ok) throw new Error(d.detail || ('Error ' + r.status));
+          return d;
+        }};
+        document.querySelectorAll('.wk-toggle').forEach(b => b.addEventListener('click', async () => {{
+          const next = ORDER[(ORDER.indexOf(b.dataset.status) + 1) % ORDER.length];
+          b.disabled = true;
+          try {{ await post('/plan/status', {{ date: b.dataset.date, meal: b.dataset.meal, status: next }});
+                 b.dataset.status = next; b.textContent = LABEL[next]; }}
+          catch (e) {{ window.notify ? window.notify(e.message, {{tone:'error'}}) : alert(e.message); }}
+          b.disabled = false;
+        }}));
+        document.querySelectorAll('.gap-chip').forEach(b => b.addEventListener('click', async () => {{
+          try {{ await post('/plan/status', {{ date: b.dataset.date, meal: b.dataset.meal, status: b.dataset.status }});
+                 b.closest('.gap-row').remove(); }}
+          catch (e) {{ window.notify ? window.notify(e.message, {{tone:'error'}}) : alert(e.message); }}
+        }}));
+        const meals = ['lunch', 'dinner'];
+        function fills() {{
+          const parts = meals.map(m => {{
+            const sel = document.getElementById('ps-' + m), srv = +document.getElementById('ps-' + m + '-srv').value;
+            if (!sel.value || !srv) return null;
+            const n = Math.max(1, Math.ceil(srv / PER));
+            return m.charAt(0).toUpperCase() + m.slice(1) + ' covers ' + n + (n === 1 ? ' meal' : ' meals');
+          }}).filter(Boolean);
+          document.getElementById('ps-fills').textContent = parts.join(' · ');
+        }}
+        meals.forEach(m => {{
+          const sel = document.getElementById('ps-' + m), srv = document.getElementById('ps-' + m + '-srv');
+          sel.addEventListener('change', () => {{ const o = sel.selectedOptions[0]; srv.value = o && o.dataset.srv ? o.dataset.srv : ''; fills(); }});
+          srv.addEventListener('input', fills);
+        }});
+        document.getElementById('ps-fill').addEventListener('click', async (ev) => {{
+          const btn = ev.currentTarget, msg = document.getElementById('ps-msg');
+          const v = m => document.getElementById('ps-' + m).value;
+          const s = m => +document.getElementById('ps-' + m + '-srv').value || null;
+          if (!v('lunch') && !v('dinner')) {{ msg.textContent = 'Pick a lunch or a dinner recipe.'; return; }}
+          btn.disabled = true; msg.textContent = 'Filling…';
+          try {{
+            await post('/plan/prep', {{ prep_date: document.getElementById('ps-day').value, end_date: '{nw[-1].isoformat()}',
+              lunch_recipe_id: +v('lunch') || null, lunch_servings: v('lunch') ? s('lunch') : null,
+              dinner_recipe_id: +v('dinner') || null, dinner_servings: v('dinner') ? s('dinner') : null }});
+            location.href = location.pathname + '#left'; location.reload();
+          }} catch (e) {{ msg.textContent = e.message; btn.disabled = false; }}
+        }});
+      }})();
+      </script>
+    """
+    return HTMLResponse(_shell("Plan the week", body, active="plan"))
+
+
+def _note_icon(text: str) -> str:
+    t = text.strip().lower()
+    if t.startswith("away"):
+        return "✈️"
+    if t.startswith(("eating out", "out")):
+        return "🍴"
+    if t.startswith("flex"):
+        return "〰️"
+    return "📝"
+
+
 def _placing_banner(r: Recipe, srv: int, per_slot: int) -> str:
     """Sticky 'placing this recipe' bar for the plan page. Tapping an empty
     slot places it there (capture-phase handler beats the add-picker)."""
@@ -2271,7 +2447,7 @@ def plan_page(
                 # just the text and a remove button.
                 slot_rows.append(
                     f"<div class='slot-note flex items-center gap-3 px-5 py-2 border-b border-stone-100 last:border-0'>"
-                    f"  <div class='shrink-0 w-10 h-10 rounded-lg bg-stone-100 flex items-center justify-center text-lg'>📝</div>"
+                    f"  <div class='shrink-0 w-10 h-10 rounded-lg bg-stone-100 flex items-center justify-center text-lg'>{_note_icon(s.note)}</div>"
                     f"  <span class='uppercase text-stone-400 font-semibold shrink-0' style='font-size:10px;letter-spacing:0.1em;width:4.25rem;white-space:nowrap;'>{_h(s.meal)}</span>"
                     f"  <div class='flex-1 min-w-0'><span class='serif text-lg font-medium'>{_h(s.note)}</span></div>"
                     f"  <button type='button' class='note-del text-stone-300 hover:text-rose-600 px-2 text-xl leading-none shrink-0' "
@@ -2475,7 +2651,10 @@ def plan_page(
 
       {f'<div class="card p-8 text-center mt-6"><div class="serif text-2xl text-stone-400 italic mb-1">Nothing planned.</div><p class="text-sm text-stone-500 mt-2">Tap a recipe from the <a href="{PREFIX}/app/" class="text-amber-700 hover:underline">Library</a> and use Add to plan to start the week.</p></div>' if all(s.recipe_id is None and not s.note for d in view for s in d.slots) else ''}
 
-      <a href="{PREFIX}/app/shop" class="mt-6 block card text-center py-4 serif italic text-lg matte-emerald hover:shadow-lg transition-shadow">
+      <a href="{PREFIX}/app/plan/session" class="mt-6 block card text-center py-4 serif italic text-lg hover:shadow-lg transition-shadow" style="background:#FFFBEB">
+        Plan the week →
+      </a>
+      <a href="{PREFIX}/app/shop" class="mt-3 block card text-center py-4 serif italic text-lg matte-emerald hover:shadow-lg transition-shadow">
         Build the shopping list →
       </a>
 
@@ -2527,6 +2706,11 @@ def plan_page(
                        class="flex-1 min-w-0 border border-stone-200 rounded-lg px-3 py-2 bg-white">
                 <button type="submit" class="bg-stone-900 text-white text-sm font-medium px-4 rounded-lg shrink-0">Add</button>
               </form>
+              <div id="note-quick" class="flex gap-2 mt-2" hidden>
+                <button type="button" class="note-chip border border-stone-300 rounded-full px-3 py-1 text-sm bg-white" data-text="Away">✈️ Away</button>
+                <button type="button" class="note-chip border border-stone-300 rounded-full px-3 py-1 text-sm bg-white" data-text="Eating out">🍴 Eating out</button>
+                <button type="button" class="note-chip border border-stone-300 rounded-full px-3 py-1 text-sm bg-white" data-text="Flex">〰️ Flex</button>
+              </div>
             </div>
             <div id="swap-list" class="swap-list">
               {pick_rows}
@@ -2753,6 +2937,10 @@ def plan_page(
         const swapTitle = document.getElementById('swap-title');
         const noteForm = document.getElementById('note-form');
         const noteText = document.getElementById('note-text');
+        const noteQuick = document.getElementById('note-quick');
+        noteQuick.querySelectorAll('.note-chip').forEach(b => b.addEventListener('click', () => {{
+          noteText.value = b.dataset.text; noteForm.requestSubmit();
+        }}));
         noteForm.addEventListener('submit', async (e) => {{
           e.preventDefault();
           const text = noteText.value.trim();
@@ -2788,7 +2976,7 @@ def plan_page(
         }});
         swapBtn.addEventListener('click', () => {{
           openSwapFullscreen();
-          noteForm.hidden = true;
+          noteForm.hidden = true; noteQuick.hidden = true;
           swapTitle.textContent = 'Swap for…';
           filter.value = '';
           filterList('');
@@ -2892,7 +3080,7 @@ def plan_page(
             const mv = sheet.querySelector('[data-view="move"]');
             if (mv) mv.hidden = true;
             openSwapFullscreen();
-            noteForm.hidden = false;
+            noteForm.hidden = false; noteQuick.hidden = false;
             noteText.value = '';
             filter.value = '';
             filterList('');

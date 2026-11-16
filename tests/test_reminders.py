@@ -132,7 +132,7 @@ def test_plan_reminder_once_per_day_thu_to_sun(session, household, sent):
     assert len(sent) == 1
     msg = sent[0]["data"]
     assert msg["title"] == "Time to plan the week" and "20 meals" in msg["body"]
-    assert msg["url"].endswith("/app/plan?start=2026-06-05") and "badge" not in msg
+    assert msg["url"].endswith("/app/plan/session") and "badge" not in msg
     assert reminders.run_plan_check(session, datetime(2026, 6, 2, 23, 0, tzinfo=UTC)) is False  # Tuesday
 
 

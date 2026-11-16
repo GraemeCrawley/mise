@@ -129,7 +129,7 @@ def run_plan_check(db: Session, now: datetime | None = None) -> bool:
     _, end = plan_window(today)
     n = len(gaps)
     for sub in subs:
-        url = f"{sub.origin or ''}{push_service.PREFIX}/app/plan?start={(today + timedelta(days=1)).isoformat()}"
+        url = f"{sub.origin or ''}{push_service.PREFIX}/app/plan/session"
         push_service.send(db, sub, {
             "title": "Time to plan the week",
             "body": f"{n} {'meal isn' if n == 1 else 'meals aren'}’t planned between tomorrow "

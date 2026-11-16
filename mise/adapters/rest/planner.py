@@ -220,3 +220,50 @@ def get_plan(
         )
         for d in view
     ]
+
+
+# ---------------------------------------------------------------- planning session
+
+class StatusIn(BaseModel):
+    date: _date
+    meal: str
+    status: str  # home | away | out | flex
+
+
+@router.post("/status", status_code=200)
+def set_status(body: StatusIn, db: Session = Depends(get_session)) -> dict:
+    from mise.services import weekplan
+    try:
+        weekplan.set_status(db, body.date, body.meal, body.status)
+        db.commit()
+    except ValueError as e:
+        db.rollback()
+        raise HTTPException(status_code=409 if "already taken" in str(e) else 400, detail=str(e)) from e
+    return {"ok": True}
+
+
+class PrepIn(BaseModel):
+    prep_date: _date
+    end_date: _date
+    lunch_recipe_id: int | None = None
+    lunch_servings: int | None = None
+    dinner_recipe_id: int | None = None
+    dinner_servings: int | None = None
+
+
+@router.post("/prep", status_code=200)
+def fill_prep(body: PrepIn, db: Session = Depends(get_session)) -> dict:
+    from mise.services import weekplan
+    if body.lunch_recipe_id is None and body.dinner_recipe_id is None:
+        raise HTTPException(status_code=400, detail="Pick a lunch or a dinner recipe.")
+    try:
+        sessions = weekplan.fill_from_prep(
+            db, body.prep_date, body.end_date,
+            lunch=(body.lunch_recipe_id, body.lunch_servings) if body.lunch_recipe_id else None,
+            dinner=(body.dinner_recipe_id, body.dinner_servings) if body.dinner_recipe_id else None,
+        )
+        db.commit()
+    except ValueError as e:
+        db.rollback()
+        raise HTTPException(status_code=400, detail=str(e)) from e
+    return {"placed": len(sessions)}
