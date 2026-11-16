@@ -316,6 +316,8 @@ def _alt_qty_displays(qty: float | int | None, unit: str | None) -> list[str]:
 _APP_CSS = f"""
 <link rel="stylesheet" href="{PREFIX}/static/tw.css?v=6">
 <link rel="manifest" href="{PREFIX}/static/manifest.json">
+<link rel="apple-touch-icon" href="{PREFIX}/static/icon-180.png">
+<link rel="icon" type="image/svg+xml" href="{PREFIX}/static/icon.svg">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="theme-color" content="#FAF7F2">
@@ -2175,164 +2177,242 @@ def recipe_draft_page(recipe_id: int, db: Session = Depends(get_session)) -> HTM
 # Plan
 # =============================================================================
 
-_STATUS_LABEL = {"home": "🏠 Home", "away": "✈️ Away", "out": "🍴 Out", "flex": "〰️ Flex"}
+_STATUS_PILL = {
+    "away": ("✈️ Away", "#EEF2FF", "#3730A3"),
+    "out": ("🍴 Out", "#FDF2F8", "#9D174D"),
+    "flex": ("〰️ Flex", "#F5F5F4", "#57534E"),
+}
 
 
-def _gap_rows(gaps: list) -> str:
-    rows = []
-    for d, meal in gaps:
-        rows.append(
-            f"<div class='gap-row flex items-center gap-2 py-2 border-b border-stone-100 last:border-0'>"
-            f"  <div class='flex-1 min-w-0'><div class='font-medium' style='white-space:nowrap'>{d.strftime('%a')} {meal}</div>"
-            f"  <div class='text-xs text-stone-400'>{d.strftime('%b %-d')}</div></div>"
-            f"  <a href='{PREFIX}/app/plan?start={d.isoformat()}' class='text-sm text-amber-800 px-2 py-1'>Pick</a>"
-            + "".join(
-                f"<button type='button' class='gap-chip border border-stone-300 rounded-full px-2 py-1 text-xs bg-white' "
-                f"data-date='{d.isoformat()}' data-meal='{meal}' data-status='{k}'>{_STATUS_LABEL[k]}</button>"
-                for k in ("away", "out", "flex"))
-            + "</div>")
-    return "".join(rows) or "<div class='text-sm text-emerald-700 py-2'>All covered ✓</div>"
+def _week_cell(s) -> str:
+    """One lunch/dinner box in the planning grid. Every box opens the sheet."""
+    from mise.services import weekplan
+    data = f"data-date='{s.date.isoformat()}' data-meal='{s.meal}' data-label='{s.date.strftime('%A')} {s.meal}'"
+    base = "wk-cell w-full text-left rounded-xl px-2 py-2 min-w-0"
+    if s.recipe_id is not None:
+        lead = (s.position or 1) == 1
+        sub = "fresh" if lead else f"leftover {s.position}/{s.total_slots}"
+        return (f"<button type='button' class='{base} {_recipe_color(s.recipe_id)}' {data} data-filled='1' "
+                f"style='opacity:{1 if lead else 0.7}'>"
+                f"<div class='text-xs font-medium truncate'>{_recipe_emoji(s.recipe_name)} {_h(s.recipe_name)}</div>"
+                f"<div class='text-stone-500' style='font-size:10px'>{sub}</div></button>")
+    st = weekplan.status_of(s.note)
+    if st in _STATUS_PILL:
+        label, bg, fg = _STATUS_PILL[st]
+        return (f"<button type='button' class='{base} text-sm font-medium' {data} data-status='{st}' "
+                f"style='background:{bg};color:{fg}'>{label}</button>")
+    if st == "note":
+        return (f"<button type='button' class='{base} text-xs truncate' {data} data-filled='1' "
+                f"style='background:#F5F5F4'>📝 {_h(s.note)}</button>")
+    return (f"<button type='button' class='{base} wk-empty text-center text-lg' {data} "
+            f"style='border:1.5px dashed #FCD34D;color:#B45309'>+</button>")
 
 
 @router.get("/app/plan/session", response_class=HTMLResponse)
 def plan_session_page(db: Session = Depends(get_session)) -> HTMLResponse:
     from mise.services import weekplan
     today = _Date.today()
-    rest = weekplan.rest_of_week(today)
     nw = weekplan.next_week(today)
-    rest_gaps = weekplan.uncovered(db, rest) if rest else []
-    next_view = planner_service.get_view(nw[0], 7, db)
+    start = today + _Td(days=1)
+    view = planner_service.get_view(start, (nw[-1] - start).days + 1, db)
     prep_default = weekplan.default_prep_day(db, nw)
+    open_count = len(weekplan.uncovered(db, [d.date for d in view]))
 
-    grid_rows = []
-    for day in next_view:
-        cells = []
-        for meal in weekplan.MEALS:
-            s = next(x for x in day.slots if x.meal == meal)
-            if s.recipe_id is not None:
-                cells.append(f"<div class='wk-cell rounded-lg px-2 py-2 text-xs text-stone-600 truncate' style='background:#F5F5F4'>{_h(s.recipe_name)}</div>")
-                continue
-            st = weekplan.status_of(s.note) or "home"
-            if st == "note":
-                cells.append(f"<div class='wk-cell rounded-lg px-2 py-2 text-xs text-stone-600 truncate' style='background:#F5F5F4'>📝 {_h(s.note)}</div>")
-                continue
-            cells.append(
-                f"<button type='button' class='wk-cell wk-toggle rounded-lg px-2 py-2 text-sm border border-stone-200 bg-white' "
-                f"data-date='{s.date.isoformat()}' data-meal='{meal}' data-status='{st}'>{_STATUS_LABEL[st]}</button>")
-        grid_rows.append(
-            f"<div class='grid gap-2 items-center' style='grid-template-columns:5.5rem 1fr 1fr'>"
-            f"<div><div class='font-medium text-sm'>{day.date.strftime('%A')}</div><div class='text-xs text-stone-400'>{day.date.strftime('%b %-d')}</div></div>"
-            f"{''.join(cells)}</div>")
+    rows = []
+    for day in view:
+        if day.date == nw[0] and day is not view[0]:
+            rows.append("<div class='serif text-base font-medium pt-3 pb-1' style='border-top:1px solid #E7E5E4'>Next week</div>")
+        cells = "".join(_week_cell(next(x for x in day.slots if x.meal == m)) for m in weekplan.MEALS)
+        rows.append(
+            f"<div class='grid gap-2 items-stretch' style='grid-template-columns:3.25rem 1fr 1fr'>"
+            f"<div class='pt-1'><div class='text-sm font-medium'>{day.date.strftime('%a')}</div>"
+            f"<div class='text-stone-400' style='font-size:11px'>{day.date.strftime('%b %-d')}</div></div>{cells}</div>")
 
-    recipes = db.exec(select(Recipe).where(Recipe.archived == False)).all()  # noqa: E712
-    recipes = sorted(recipes, key=lambda r: ("Favourites" not in (r.tags or []), r.display_title().lower()))
-    options = "".join(
-        f"<option value='{r.id}' data-srv='{r.servings or 2}'>{'♥ ' if 'Favourites' in (r.tags or []) else ''}{_h(r.display_title())}</option>"
+    hh = db.exec(select(Household)).first() or Household()
+    recipes = sorted(db.exec(select(Recipe).where(Recipe.archived == False)).all(),  # noqa: E712
+                     key=lambda r: ("Favourites" not in (r.tags or []), r.display_title().lower()))
+    recipe_rows = "".join(
+        f"<button type='button' class='rc-row w-full flex items-center gap-3 px-2 py-2 rounded-lg text-left' "
+        f"data-id='{r.id}' data-srv='{r.servings or 2}' data-name='{_h(r.display_title())}' "
+        f"data-emoji='{_h(_recipe_emoji(r.name_english or r.name_original, r.emoji))}' "
+        f"data-q='{_h(r.display_title().lower())}'>"
+        f"<span class='shrink-0 w-9 h-9 rounded-lg {_recipe_color(r.id)} flex items-center justify-center'>"
+        f"{_recipe_emoji(r.name_english or r.name_original, r.emoji)}</span>"
+        f"<span class='flex-1 min-w-0 truncate serif'>{_h(r.display_title())}</span>"
+        f"<span class='text-rose-500 text-sm'>{'♥' if 'Favourites' in (r.tags or []) else ''}</span></button>"
         for r in recipes if r.servings)
-    prep_opts = "".join(
-        f"<option value='{d.isoformat()}' {'selected' if d == prep_default else ''}>{d.strftime('%A %b %-d')}</option>" for d in nw)
-    next_gaps = weekplan.uncovered(db, nw)
+    day_chips = "".join(
+        f"<button type='button' class='pd-chip rounded-lg py-2 text-center border' data-date='{d.isoformat()}' "
+        f"style='{'background:#B45309;color:white;border-color:#B45309' if d == prep_default else 'background:white;border-color:#E7E5E4'}'>"
+        f"<div class='text-sm font-medium'>{d.strftime('%a')}</div><div style='font-size:10px' class='opacity-75'>{d.strftime('%-d')}</div></button>"
+        for d in nw)
 
-    def pick(meal: str, hint: str) -> str:
+    def prep_card(meal: str, when: str) -> str:
         return f"""
-        <label class="block text-sm text-stone-600 mt-3">{meal.title()} recipe <span class="text-xs text-stone-400">{hint}</span></label>
-        <div class="flex gap-2 mt-1">
-          <select id="ps-{meal}" class="flex-1 min-w-0 border border-stone-300 rounded-lg px-2 py-2 bg-white text-base">
-            <option value="">None</option>{options}</select>
-          <input id="ps-{meal}-srv" type="number" min="1" max="60" inputmode="numeric" class="w-16 border border-stone-300 rounded-lg px-2 py-2 text-base" aria-label="{meal} servings">
+        <div class="mt-3">
+          <div class="text-xs uppercase text-stone-400" style="letter-spacing:0.12em">{"Lunches" if meal == "lunch" else "Dinners"} · {when}</div>
+          <button type="button" class="pk-open mt-1 w-full flex items-center gap-3 rounded-xl px-3 py-3 text-left"
+                  data-meal="{meal}" style="border:1.5px dashed #FCD34D">
+            <span class="pk-emoji shrink-0 text-xl">＋</span>
+            <span class="pk-name flex-1 min-w-0 truncate serif text-lg" style="color:#B45309">Choose a recipe</span>
+          </button>
+          <div class="pk-srv mt-2 items-center gap-3" data-meal="{meal}" style="display:none">
+            <div class="flex items-center border border-stone-200 rounded-lg bg-white shrink-0" style="white-space:nowrap">
+              <button type="button" class="pk-dec px-3 py-1 text-lg leading-none" aria-label="Fewer servings">−</button>
+              <span class="px-1 text-sm"><b class="pk-n"></b> srv</span>
+              <button type="button" class="pk-inc px-3 py-1 text-lg leading-none" aria-label="More servings">+</button>
+            </div>
+            <span class="pk-covers text-xs text-stone-500"></span>
+          </div>
+          <button type="button" class="pk-all mt-2 text-sm rounded-lg px-3 py-1" data-meal="{meal}"
+                  style="display:none;background:#FEF3C7;color:#92400E"></button>
         </div>"""
 
     body = f"""
       <div class="mb-1 text-[10px] uppercase tracking-[0.25em] text-stone-400">Weekly planning</div>
       <h1 class="serif text-4xl font-medium tracking-tight leading-none">Plan the <em class="text-stone-500">week</em>.</h1>
-      <p class="text-sm text-stone-500 mt-2">Rest of this week first, then next week ({nw[0].strftime('%b %-d')} – {nw[-1].strftime('%b %-d')}).</p>
+      <p class="text-sm text-stone-500 mt-2">Tomorrow through Sunday {nw[-1].strftime('%b %-d')}.</p>
 
-      <div class="card p-4 mt-5">
-        <div class="serif text-lg font-medium">1 · Rest of this week</div>
-        <p class="text-xs text-stone-500 mt-1">Empty lunches and dinners before Monday. Pick a recipe, or mark them.</p>
-        <div class="mt-2">{_gap_rows(rest_gaps) if rest else "<div class='text-sm text-stone-500 py-2'>It's Sunday — straight to next week.</div>"}</div>
+      <div class="card p-4 mt-5" id="week">
+        <div class="flex items-baseline justify-between">
+          <div class="serif text-lg font-medium">1 · Your week</div>
+          <div class="text-xs {'text-emerald-700' if not open_count else 'text-amber-800'}">{'All covered ✓' if not open_count else f'{open_count} open'}</div>
+        </div>
+        <p class="text-xs text-stone-500 mt-1">Tap a meal to mark it away, out or flex, or to pick a recipe.</p>
+        <div class="grid gap-2 mt-3 text-stone-400 uppercase" style="grid-template-columns:3.25rem 1fr 1fr;font-size:10px;letter-spacing:0.12em"><span></span><span>Lunch</span><span>Dinner</span></div>
+        <div class="space-y-2 mt-1">{''.join(rows)}</div>
       </div>
 
       <div class="card p-4 mt-4">
-        <div class="serif text-lg font-medium">2 · Who's home next week</div>
-        <p class="text-xs text-stone-500 mt-1">Tap a meal to switch Home → Away → Out → Flex. Away and out meals get no leftovers and no reminders.</p>
-        <div class="grid gap-2 mt-3 text-xs text-stone-400 uppercase" style="grid-template-columns:5.5rem 1fr 1fr;letter-spacing:0.1em"><span></span><span>Lunch</span><span>Dinner</span></div>
-        <div class="space-y-2 mt-1">{''.join(grid_rows)}</div>
+        <div class="serif text-lg font-medium">2 · Prep day</div>
+        <p class="text-xs text-stone-500 mt-1">Cook two meals in one go: one for lunches, one for dinners.</p>
+        <div class="grid gap-1 mt-3" style="grid-template-columns:repeat(7,minmax(0,1fr))">{day_chips}</div>
+        {prep_card("lunch", "from the next day")}
+        {prep_card("dinner", "from that evening")}
+        <button type="button" id="ps-fill" class="mt-4 w-full text-white font-medium py-3 rounded-xl" style="background:#1C1917">Fill the week</button>
+        <div id="ps-msg" class="text-sm mt-2" style="color:#B91C1C"></div>
       </div>
 
-      <div class="card p-4 mt-4">
-        <div class="serif text-lg font-medium">3 · Prep day and its two meals</div>
-        <label class="block text-sm text-stone-600 mt-2" for="ps-day">Prep day</label>
-        <select id="ps-day" class="mt-1 w-full border border-stone-300 rounded-lg px-2 py-2 bg-white text-base">{prep_opts}</select>
-        {pick("lunch", "· starts the next day's lunch")}
-        {pick("dinner", "· starts that evening")}
-        <p id="ps-fills" class="text-xs text-stone-500 mt-2"></p>
-        <button type="button" id="ps-fill" class="mt-3 w-full text-white font-medium py-3 rounded-xl" style="background:#b45309">Fill the week</button>
-        <div id="ps-msg" class="text-sm mt-2"></div>
-      </div>
-
-      <div class="card p-4 mt-4" id="left">
-        <div class="serif text-lg font-medium">4 · Still uncovered next week</div>
-        <p class="text-xs text-stone-500 mt-1">Pick a recipe, or mark them so reminders leave them alone.</p>
-        <div class="mt-2">{_gap_rows(next_gaps)}</div>
-      </div>
-
-      <div class="grid grid-cols-2 gap-2 mt-4">
-        <a href="{PREFIX}/app/plan?start={nw[0].isoformat()}" class="card text-center py-3 text-sm">See next week</a>
-        <a href="{PREFIX}/app/shop" class="card text-center py-3 text-sm matte-emerald">Shopping list →</a>
-      </div>
+      <a href="{PREFIX}/app/shop" class="mt-4 block card text-center py-4 serif italic text-lg matte-emerald">Shopping list →</a>
       <div style="height:6rem"></div>
+
+      <div id="sh" style="display:none;position:fixed;inset:0;z-index:60;background:rgba(28,25,23,0.45)">
+        <div style="position:absolute;left:0;right:0;bottom:0;height:75vh;display:flex;flex-direction:column;background:#FAF7F2;border-radius:1.25rem 1.25rem 0 0;padding:1rem 1rem 1.5rem">
+          <div class="flex items-center justify-between">
+            <div id="sh-title" class="serif text-xl font-medium"></div>
+            <button type="button" id="sh-x" class="text-stone-400 text-2xl leading-none px-2" aria-label="Close">×</button>
+          </div>
+          <div id="sh-status" class="grid grid-cols-4 gap-2 mt-3">
+            <button type="button" class="sh-st rounded-lg py-2 text-sm" data-status="away" style="background:#EEF2FF;color:#3730A3">✈️ Away</button>
+            <button type="button" class="sh-st rounded-lg py-2 text-sm" data-status="out" style="background:#FDF2F8;color:#9D174D">🍴 Out</button>
+            <button type="button" class="sh-st rounded-lg py-2 text-sm" data-status="flex" style="background:#F5F5F4;color:#57534E">〰️ Flex</button>
+            <button type="button" class="sh-st rounded-lg py-2 text-sm border border-stone-200 bg-white" data-status="home">Clear</button>
+          </div>
+          <input id="sh-q" type="search" placeholder="Search recipes…" autocomplete="off"
+                 class="mt-3 w-full border border-stone-200 rounded-lg px-3 py-2 bg-white text-base">
+          <div id="sh-list" class="mt-2" style="overflow-y:auto;-webkit-overflow-scrolling:touch">{recipe_rows}</div>
+        </div>
+      </div>
+
       <script>
       (function() {{
-        const P = '{PREFIX}', PER = {(db.exec(select(Household)).first() or Household()).default_servings_per_meal or 2};
-        const LABEL = {_json.dumps(_STATUS_LABEL)};
-        const ORDER = ['home', 'away', 'out', 'flex'];
+        const P = '{PREFIX}', PER = {hh.default_servings_per_meal or 2}, END = '{nw[-1].isoformat()}';
+        const $ = s => document.querySelector(s);
         const post = async (path, body) => {{
           const r = await fetch(P + path, {{ method: 'POST', headers: {{ 'Content-Type': 'application/json' }}, body: JSON.stringify(body) }});
           const d = await r.json().catch(() => ({{}}));
           if (!r.ok) throw new Error(d.detail || ('Error ' + r.status));
           return d;
         }};
-        document.querySelectorAll('.wk-toggle').forEach(b => b.addEventListener('click', async () => {{
-          const next = ORDER[(ORDER.indexOf(b.dataset.status) + 1) % ORDER.length];
-          b.disabled = true;
-          try {{ await post('/plan/status', {{ date: b.dataset.date, meal: b.dataset.meal, status: next }});
-                 b.dataset.status = next; b.textContent = LABEL[next]; }}
-          catch (e) {{ window.notify ? window.notify(e.message, {{tone:'error'}}) : alert(e.message); }}
-          b.disabled = false;
-        }}));
-        document.querySelectorAll('.gap-chip').forEach(b => b.addEventListener('click', async () => {{
-          try {{ await post('/plan/status', {{ date: b.dataset.date, meal: b.dataset.meal, status: b.dataset.status }});
-                 b.closest('.gap-row').remove(); }}
-          catch (e) {{ window.notify ? window.notify(e.message, {{tone:'error'}}) : alert(e.message); }}
-        }}));
-        const meals = ['lunch', 'dinner'];
-        function fills() {{
-          const parts = meals.map(m => {{
-            const sel = document.getElementById('ps-' + m), srv = +document.getElementById('ps-' + m + '-srv').value;
-            if (!sel.value || !srv) return null;
-            const n = Math.max(1, Math.ceil(srv / PER));
-            return m.charAt(0).toUpperCase() + m.slice(1) + ' covers ' + n + (n === 1 ? ' meal' : ' meals');
-          }}).filter(Boolean);
-          document.getElementById('ps-fills').textContent = parts.join(' · ');
+        const fail = e => window.notify ? window.notify(e.message, {{tone:'error'}}) : alert(e.message);
+        const reloadTo = id => {{ sessionStorage.setItem('ps-scroll', id); location.reload(); }};
+        try {{ const id = sessionStorage.getItem('ps-scroll'); if (id) {{ sessionStorage.removeItem('ps-scroll');
+          requestAnimationFrame(() => document.getElementById(id)?.scrollIntoView()); }} }} catch (e) {{}}
+
+        // ---- the sheet: a slot (status + recipe) or a prep pick (recipe only)
+        let ctx = null;
+        function openSheet(c, title) {{
+          ctx = c; $('#sh-title').textContent = title;
+          $('#sh-status').style.display = c.kind === 'slot' ? '' : 'none';
+          $('#sh-q').value = ''; filter('');
+          $('#sh').style.display = 'block'; document.body.style.overflow = 'hidden';
+          const fab = document.getElementById('fb-fab'); if (fab) fab.style.display = 'none';
         }}
-        meals.forEach(m => {{
-          const sel = document.getElementById('ps-' + m), srv = document.getElementById('ps-' + m + '-srv');
-          sel.addEventListener('change', () => {{ const o = sel.selectedOptions[0]; srv.value = o && o.dataset.srv ? o.dataset.srv : ''; fills(); }});
-          srv.addEventListener('input', fills);
+        function closeSheet() {{ $('#sh').style.display = 'none'; document.body.style.overflow = ''; ctx = null;
+          const fab = document.getElementById('fb-fab'); if (fab) fab.style.display = ''; }}
+        $('#sh-x').addEventListener('click', closeSheet);
+        $('#sh').addEventListener('click', e => {{ if (e.target.id === 'sh') closeSheet(); }});
+        function filter(q) {{ q = q.trim().toLowerCase();
+          document.querySelectorAll('.rc-row').forEach(r => r.style.display = !q || r.dataset.q.includes(q) ? '' : 'none'); }}
+        $('#sh-q').addEventListener('input', e => filter(e.target.value));
+
+        document.querySelectorAll('.wk-cell').forEach(c => c.addEventListener('click', () => {{
+          if (c.dataset.filled) {{ location.href = P + '/app/plan?start=' + c.dataset.date; return; }}
+          openSheet({{ kind: 'slot', date: c.dataset.date, meal: c.dataset.meal }}, c.dataset.label.charAt(0).toUpperCase() + c.dataset.label.slice(1));
+        }}));
+        document.querySelectorAll('.sh-st').forEach(b => b.addEventListener('click', async () => {{
+          try {{ await post('/plan/status', {{ date: ctx.date, meal: ctx.meal, status: b.dataset.status }}); reloadTo('week'); }}
+          catch (e) {{ fail(e); }}
+        }}));
+        document.querySelectorAll('.rc-row').forEach(r => r.addEventListener('click', async () => {{
+          if (!ctx) return;
+          if (ctx.kind === 'slot') {{
+            try {{ await post('/plan/place', {{ recipe_id: +r.dataset.id, date: ctx.date, meal: ctx.meal }}); reloadTo('week'); }}
+            catch (e) {{ fail(e); }}
+            return;
+          }}
+          picks[ctx.meal] = {{ id: +r.dataset.id, srv: +r.dataset.srv }};
+          const card = document.querySelector('.pk-open[data-meal="' + ctx.meal + '"]');
+          card.querySelector('.pk-emoji').textContent = r.dataset.emoji;
+          card.querySelector('.pk-name').textContent = r.dataset.name;
+          card.querySelector('.pk-name').style.color = '#1C1917';
+          card.style.border = '1px solid #E7E5E4'; card.style.background = 'white';
+          showSrv(ctx.meal); closeSheet();
+        }}));
+
+        // ---- prep day + picks
+        let prepDate = '{prep_default.isoformat()}';
+        const picks = {{}};
+        document.querySelectorAll('.pd-chip').forEach(b => b.addEventListener('click', () => {{
+          prepDate = b.dataset.date;
+          document.querySelectorAll('.pd-chip').forEach(x => {{ const on = x === b;
+            x.style.background = on ? '#B45309' : 'white'; x.style.color = on ? 'white' : ''; x.style.borderColor = on ? '#B45309' : '#E7E5E4'; }});
+          Object.keys(picks).forEach(showSrv);
+        }}));
+        document.querySelectorAll('.pk-open').forEach(b => b.addEventListener('click', () =>
+          openSheet({{ kind: 'pick', meal: b.dataset.meal }}, 'Recipe for ' + b.dataset.meal + 'es'.slice(b.dataset.meal === 'lunch' ? 0 : 1))));
+        function showSrv(meal) {{
+          const box = document.querySelector('.pk-srv[data-meal="' + meal + '"]'), p = picks[meal];
+          box.style.display = 'flex'; box.querySelector('.pk-n').textContent = p.srv;
+          const n = Math.max(1, Math.ceil(p.srv / PER));
+          box.querySelector('.pk-covers').textContent = 'covers ' + n + ' ' + meal + (n === 1 ? '' : (meal === 'lunch' ? 'es' : 's'));
+          // Offer the batch size that covers every open meal from its first day to Sunday.
+          const first = meal === 'lunch' ? addDays(prepDate, 1) : prepDate;
+          const open = [...document.querySelectorAll('.wk-empty[data-meal="' + meal + '"]')].filter(c => c.dataset.date >= first).length;
+          const all = document.querySelector('.pk-all[data-meal="' + meal + '"]');
+          if (open > n) {{ all.style.display = ''; all.dataset.srv = open * PER;
+            all.textContent = 'Make ' + open * PER + ' to cover all ' + open + ' ' + (meal === 'lunch' ? 'lunches' : 'dinners')
+              + (open > 4 ? ' (freeze the last few)' : ''); }}
+          else all.style.display = 'none';
+        }}
+        function addDays(iso, n) {{ const d = new Date(iso + 'T12:00:00'); d.setDate(d.getDate() + n); return d.toISOString().slice(0, 10); }}
+        document.querySelectorAll('.pk-all').forEach(b => b.addEventListener('click', () => {{
+          picks[b.dataset.meal].srv = +b.dataset.srv; showSrv(b.dataset.meal); }}));
+        document.querySelectorAll('.pk-srv').forEach(box => {{
+          const meal = box.dataset.meal;
+          box.querySelector('.pk-dec').addEventListener('click', () => {{ picks[meal].srv = Math.max(1, picks[meal].srv - 1); showSrv(meal); }});
+          box.querySelector('.pk-inc').addEventListener('click', () => {{ picks[meal].srv = Math.min(60, picks[meal].srv + 1); showSrv(meal); }});
         }});
-        document.getElementById('ps-fill').addEventListener('click', async (ev) => {{
-          const btn = ev.currentTarget, msg = document.getElementById('ps-msg');
-          const v = m => document.getElementById('ps-' + m).value;
-          const s = m => +document.getElementById('ps-' + m + '-srv').value || null;
-          if (!v('lunch') && !v('dinner')) {{ msg.textContent = 'Pick a lunch or a dinner recipe.'; return; }}
-          btn.disabled = true; msg.textContent = 'Filling…';
+        $('#ps-fill').addEventListener('click', async ev => {{
+          const msg = $('#ps-msg');
+          if (!picks.lunch && !picks.dinner) {{ msg.textContent = 'Choose a lunch or a dinner recipe first.'; return; }}
+          ev.currentTarget.disabled = true; msg.textContent = '';
           try {{
-            await post('/plan/prep', {{ prep_date: document.getElementById('ps-day').value, end_date: '{nw[-1].isoformat()}',
-              lunch_recipe_id: +v('lunch') || null, lunch_servings: v('lunch') ? s('lunch') : null,
-              dinner_recipe_id: +v('dinner') || null, dinner_servings: v('dinner') ? s('dinner') : null }});
-            location.href = location.pathname + '#left'; location.reload();
-          }} catch (e) {{ msg.textContent = e.message; btn.disabled = false; }}
+            await post('/plan/prep', {{ prep_date: prepDate, end_date: END,
+              lunch_recipe_id: picks.lunch?.id ?? null, lunch_servings: picks.lunch?.srv ?? null,
+              dinner_recipe_id: picks.dinner?.id ?? null, dinner_servings: picks.dinner?.srv ?? null }});
+            reloadTo('week');
+          }} catch (e) {{ msg.textContent = e.message; ev.currentTarget.disabled = false; }}
         }});
       }})();
       </script>

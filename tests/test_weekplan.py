@@ -75,7 +75,7 @@ def test_servings_override_and_end_limit(session, household):
 def test_session_page_and_endpoints(client, session, household):
     r = _recipe(session, household, "Chili", 8)
     page = client.get("/app/plan/session")
-    assert page.status_code == 200 and "Who's home next week" in page.text and "Chili" in page.text
+    assert page.status_code == 200 and "Your week" in page.text and "Chili" in page.text
     nw = weekplan.next_week(date.today())
     assert client.post("/plan/status", json={"date": nw[0].isoformat(), "meal": "lunch", "status": "away"}).status_code == 200
     res = client.post("/plan/prep", json={"prep_date": nw[0].isoformat(), "end_date": nw[-1].isoformat(),
@@ -93,6 +93,6 @@ def test_session_page_script_parses(client, tmp_path, household):
         pytest.skip("node not installed")
     js = re.findall(r"<script>(.*?)</script>", client.get("/app/plan/session").text, re.S)
     f = tmp_path / "page.js"
-    f.write_text([j for j in js if "wk-toggle" in j][0])
+    f.write_text([j for j in js if "wk-cell" in j][0])
     r = subprocess.run([node, "--check", str(f)], capture_output=True, text=True)
     assert r.returncode == 0, r.stderr
