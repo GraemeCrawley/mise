@@ -191,3 +191,22 @@ def test_badge_clear_variants(session):
     assert a["badge"] == 0 and "badge_zero" not in a
     assert b["badge"] == 0 and b["badge_zero"] is True
     assert c["notification"]["app_badge"] == "0"
+
+
+def test_per_phone_reminder_switches(client, session, sent):
+    from mise.models import Household
+    from mise.services import reminders
+    session.add(Household(name="T", timezone="America/Toronto"))
+    session.commit()
+    _subscribe(client)
+    _subscribe(client, endpoint="https://web.push.apple.com/def", label="Other")
+    p = client.get("/push/prefs", params={"endpoint": SUB["endpoint"]}).json()
+    assert p["on"] and all(k["on"] for k in p["kinds"])
+    r = client.post("/push/prefs", json={"endpoint": SUB["endpoint"], "kind": "gap", "on": False})
+    assert r.json() == {"kind": "gap", "on": False}
+    reminders.run_gap_check(session)
+    assert sent and {c["endpoint"] for c in sent} == {"https://web.push.apple.com/def"}
+    client.post("/push/prefs", json={"endpoint": SUB["endpoint"], "kind": "gap", "on": True})
+    assert all(k["on"] for k in client.get("/push/prefs", params={"endpoint": SUB["endpoint"]}).json()["kinds"])
+    assert client.get("/push/prefs").json()["on"] is False
+    assert client.post("/push/prefs", json={"endpoint": SUB["endpoint"], "kind": "nope", "on": False}).status_code == 400

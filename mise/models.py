@@ -462,6 +462,9 @@ class PushSubscription(SQLModel, table=True):
     created_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
     last_ok_at: datetime | None = None
     last_error: str | None = None
+    # Reminder kinds (reminders.KIND / PLAN_KIND) this phone switched off.
+    muted_kinds: list[str] = Field(sa_column=Column(JSON, nullable=False, server_default="[]"),
+                                   default_factory=list)
 
 
 class PushEvent(SQLModel, table=True):

@@ -30,6 +30,17 @@ CHECKED_MEALS = ("lunch", "dinner")
 KIND = "gap"
 
 
+# Shown on the Notifications page as per-phone switches.
+REMINDER_KINDS = (
+    ("gap", "Empty meals", "3pm: one per unplanned lunch or dinner in the next two days."),
+    ("plan", "Time to plan", "Thu\u2013Sun 7pm, until next week is planned."),
+)
+
+
+def _subs_for(db: Session, kind: str) -> list[PushSubscription]:
+    return [s for s in db.exec(select(PushSubscription)).all() if kind not in (s.muted_kinds or [])]
+
+
 def household_today(db: Session, now: datetime | None = None) -> _date:
     h = db.exec(select(Household)).first()
     tz = ZoneInfo((h.timezone if h else None) or "UTC")
@@ -64,7 +75,7 @@ def run_gap_check(db: Session, now: datetime | None = None) -> int:
     restart or second run on the same day doesn't double up."""
     today = household_today(db, now)
     gaps = empty_meals(db, today)
-    subs = list(db.exec(select(PushSubscription)).all())
+    subs = _subs_for(db, KIND)
     if not gaps or not subs:
         return 0
     sent = 0
@@ -108,7 +119,7 @@ def run_plan_check(db: Session, now: datetime | None = None) -> bool:
     if today.weekday() not in PLAN_WEEKDAYS:
         return False
     gaps = unplanned_until_next_week(db, today)
-    subs = list(db.exec(select(PushSubscription)).all())
+    subs = _subs_for(db, PLAN_KIND)
     if not gaps or not subs:
         return False
     event_id = f"plan:{today.isoformat()}"

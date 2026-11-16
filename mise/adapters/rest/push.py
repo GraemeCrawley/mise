@@ -37,6 +37,37 @@ def push_badge(db: Session = Depends(get_session)) -> dict:
     return {"count": len(reminders.empty_meals(db, reminders.household_today(db)))}
 
 
+@router.get("/push/prefs")
+def push_prefs(endpoint: str = "", db: Session = Depends(get_session)) -> dict:
+    """Which reminders this phone gets. `on` is False when the phone hasn't
+    turned notifications on at all."""
+    from mise.services import reminders
+    sub = _by_endpoint(db, endpoint)
+    muted = set((sub.muted_kinds or []) if sub else [])
+    return {"on": sub is not None, "kinds": [
+        {"key": k, "label": label, "detail": detail, "on": k not in muted}
+        for k, label, detail in reminders.REMINDER_KINDS]}
+
+
+@router.post("/push/prefs")
+async def push_prefs_set(req: Request, db: Session = Depends(get_session)) -> dict:
+    from mise.services import reminders
+    body = await req.json()
+    kind = body.get("kind")
+    if kind not in {k for k, _, _ in reminders.REMINDER_KINDS}:
+        raise HTTPException(status_code=400, detail="Unknown reminder")
+    sub = _by_endpoint(db, body.get("endpoint"))
+    if sub is None:
+        raise HTTPException(status_code=400, detail="Turn on notifications for this phone first.")
+    muted = [k for k in (sub.muted_kinds or []) if k != kind]
+    if not body.get("on"):
+        muted.append(kind)
+    sub.muted_kinds = muted
+    db.add(sub)
+    db.commit()
+    return {"kind": kind, "on": kind not in muted}
+
+
 @router.get("/push/key")
 def push_key() -> dict:
     return {"publicKey": push_service.public_key()}
@@ -162,8 +193,8 @@ def notify_test_page() -> HTMLResponse:
     )
     body = f"""
       <div class="mb-1 uppercase text-stone-400" style="font-size:10px;letter-spacing:0.25em">Notifications</div>
-      <h1 class="serif text-4xl font-medium tracking-tight leading-none">Test page.</h1>
-      <p class="text-sm text-stone-500 mt-2">Turn on notifications for this phone, then send each kind and say what you saw. Results are saved so Claude can read them.</p>
+      <h1 class="serif text-4xl font-medium tracking-tight leading-none">Settings.</h1>
+      <p class="text-sm text-stone-500 mt-2">Turn notifications on for this phone and choose which reminders it gets. Tests are further down.</p>
 
       <div id="nt-opened" hidden class="mt-4 rounded-xl px-4 py-3 text-sm" style="background:#ecfdf5;border:1px solid #a7f3d0;color:#065f46"></div>
 
@@ -177,6 +208,12 @@ def notify_test_page() -> HTMLResponse:
           <button type="button" id="nt-disable" class="border border-stone-300 text-sm px-4 py-2 rounded-lg" hidden>Turn off on this phone</button>
         </div>
         <div id="nt-msg" class="mt-3 text-sm"></div>
+      </div>
+
+      <div class="card p-4 mt-4">
+        <div class="serif text-lg font-medium">Reminders on this phone</div>
+        <p class="text-xs text-stone-500 mt-1">Each phone chooses for itself. Switching one off here doesn't change the other phone.</p>
+        <div id="nt-prefs" class="mt-3 space-y-3 text-sm"></div>
       </div>
 
       <div class="card p-4 mt-4">
@@ -258,6 +295,23 @@ def notify_test_page() -> HTMLResponse:
     $('#nt-disable').hidden = !sub;
   }
 
+  async function renderPrefs() {
+    const box = $('#nt-prefs');
+    try {
+      const p = await api('/push/prefs?endpoint=' + encodeURIComponent(endpoint || ''));
+      if (!p.on) { box.innerHTML = '<div class="text-stone-500">Turn on notifications above first.</div>'; return; }
+      box.innerHTML = p.kinds.map(k => `<label class="flex items-start gap-3">
+        <input type="checkbox" class="nt-pref mt-1" style="width:1.25rem;height:1.25rem" data-kind="${esc(k.key)}" ${k.on ? 'checked' : ''}>
+        <span><span class="font-medium">${esc(k.label)}</span><br><span class="text-xs text-stone-500">${esc(k.detail)}</span></span></label>`).join('');
+      box.querySelectorAll('.nt-pref').forEach(cb => cb.addEventListener('change', async () => {
+        cb.disabled = true;
+        try { await api('/push/prefs', { endpoint, kind: cb.dataset.kind, on: cb.checked }); }
+        catch (e) { cb.checked = !cb.checked; alert(e.message); }
+        cb.disabled = false;
+      }));
+    } catch (e) { box.textContent = e.message; }
+  }
+
   async function renderDevices() {
     try {
       const ds = await api('/push/devices');
@@ -289,7 +343,7 @@ def notify_test_page() -> HTMLResponse:
       await api('/push/subscribe', { subscription: sub.toJSON(), label: label || null, origin: location.origin });
       msg('Notifications are on for this phone. Try Plain first.', 'good');
     } catch (e) { msg(e.message || String(e), 'bad'); }
-    renderChecks(); renderDevices();
+    renderChecks().then(renderPrefs); renderDevices();
   });
 
   $('#nt-disable').addEventListener('click', async () => {
@@ -298,7 +352,7 @@ def notify_test_page() -> HTMLResponse:
       if (sub) { await api('/push/unsubscribe', { endpoint: sub.endpoint }); await sub.unsubscribe(); }
       msg('Turned off on this phone.');
     } catch (e) { msg(e.message, 'bad'); }
-    renderChecks(); renderDevices();
+    renderChecks().then(renderPrefs); renderDevices();
   });
 
   const lastTest = {};
@@ -363,6 +417,7 @@ def notify_test_page() -> HTMLResponse:
     try { const l = localStorage.getItem('mise:push-label'); if (l) $('#nt-label').value = l; } catch (e) {}
     renderDevices(); renderLog();
     await renderChecks();
+    renderPrefs();
     const q = new URLSearchParams(location.search);
     if (q.get('ntest')) {
       const action = q.get('action');
@@ -378,4 +433,4 @@ def notify_test_page() -> HTMLResponse:
 })();
 </script>"""
     script = script.replace("__PREFIX__", json.dumps(PREFIX)).replace("__KINDS__", json.dumps(kinds))
-    return HTMLResponse(_shell("Notification test", body + script, active="tools"))
+    return HTMLResponse(_shell("Notifications", body + script, active="tools"))
