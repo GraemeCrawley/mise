@@ -21,16 +21,26 @@
     if (q >= 100) return String(Math.round(q));
     return (q >= 10 ? q.toFixed(1) : q.toFixed(2)).replace(/\.?0+$/, '');
   }
-  function convert(qty, from, to) {
+  // density (g per ml) bridges volume and weight; without it they don't mix.
+  function convert(qty, from, to, density) {
     const a = T.units[from], b = T.units[to];
-    if (!a || !b || a[0] !== b[0]) return null;
-    return qty * a[1] / b[1];
+    if (!a || !b) return null;
+    let base = qty * a[1];
+    if (a[0] !== b[0]) {
+      if (!density) return null;
+      base = a[0] === 'volume' ? base * density : base / density;
+    }
+    return base / b[1];
   }
+  const dens = el => parseFloat(el.dataset.density || '0') || 0;
+  // "~" marks a weight worked out from a volume (or back): an estimate.
+  const label = (q, u, from) => (T.units[u] && T.units[from] && T.units[u][0] !== T.units[from][0] ? '~' : '')
+    + (fmt(q) + (u ? ' ' + u : '')).trim();
   function shown(el) {
     const unit = el.dataset.unit || '';
     const show = el.dataset.show || prefs[unit] || unit;
     const qty = parseFloat(el.dataset.qty || '0') * parseFloat(el.dataset.scale || '1');
-    const q = show !== unit ? convert(qty, unit, show) : qty;
+    const q = show !== unit ? convert(qty, unit, show, dens(el)) : qty;
     return q == null ? { qty, unit } : { qty: q, unit: show };
   }
   function renderAll(root) { (root || document).querySelectorAll('.measure').forEach(renderAt); }
@@ -59,11 +69,12 @@
       });
     }
     target = el;
-    const unit = el.dataset.unit, dim = T.units[unit][0];
+    const unit = el.dataset.unit, dim = T.units[unit][0], d = dens(el);
     const qty = parseFloat(el.dataset.qty) * parseFloat(el.dataset.scale || '1');
     const cur = shown(el).unit;
-    menu.innerHTML = T.choices[dim].map(u =>
-      `<button type="button" data-unit="${u}" class="${u === cur ? 'is-current' : ''}">${fmt(convert(qty, unit, u))} ${u}</button>`
+    const units = T.choices[dim].concat(d ? T.choices[dim === 'volume' ? 'mass' : 'volume'] : []);
+    menu.innerHTML = units.map(u =>
+      `<button type="button" data-unit="${u}" class="${u === cur ? 'is-current' : ''}">${label(convert(qty, unit, u, d), u, unit)}</button>`
     ).join('');
     menu.hidden = false;
     const r = el.getBoundingClientRect(), mh = menu.offsetHeight, mw = menu.offsetWidth;
@@ -73,7 +84,7 @@
   }
   function renderAt(el) {
     const s = shown(el);
-    el.textContent = (fmt(s.qty) + (s.unit ? ' ' + s.unit : '')).trim();
+    el.textContent = label(s.qty, s.unit, el.dataset.unit || '');
   }
 
   // Capture phase: a quantity inside a <label> (shopping list) must

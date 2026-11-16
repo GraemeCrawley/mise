@@ -205,12 +205,15 @@ def _step_html(text: str, ingredients: list[tuple]) -> str:
     """Escaped step text with a hidden "(qty unit, prep)" after each ingredient
     mention; cook mode reveals them. The inner spans are `.ing-qty` so the
     serving scaler rescales them along with the ingredient list."""
+    from mise.services.step_annotator import _name_stems
+    names = {_name_stems(row[0] or ""): row[0] for row in ingredients}
     out, pos = [], 0
     for m in find_mentions(text, ingredients):
         labels = m.labels or ("",) * len(m.parts)
+        name = names.get(m.keys[0]) if m.keys else None  # for cups <-> grams
         parts = " + ".join(
             # Counts read better bare: "eggs (4)", not "eggs (4 ea)".
-            Measure.of(q, u).html("ing-qty")
+            Measure.of(q, u, name).html("ing-qty")
             + (f" {_h(lab)}" if lab else "")
             for (q, u), lab in zip(((q, "" if u == "ea" else u) for q, u in m.parts), labels)
         )
@@ -231,7 +234,7 @@ _APP_CSS = f"""
 <link rel="apple-touch-icon" href="{PREFIX}/static/icon-180.png">
 <link rel="icon" type="image/svg+xml" href="{PREFIX}/static/icon.svg">
 <script>window.MISE_UNITS = {units_json()};</script>
-<script src="{PREFIX}/static/measure.js?v=1" defer></script>
+<script src="{PREFIX}/static/measure.js?v=2" defer></script>
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="theme-color" content="#FAF7F2">
@@ -243,7 +246,7 @@ _APP_CSS = f"""
   /* Quantities you can tap for other units (static/measure.js). */
   .measure-tap {{ cursor: pointer; text-decoration: underline dotted #d6d3d1; text-underline-offset: 3px; }}
   .measure-menu {{ position: fixed; z-index: 90; background: #fff; border: 1px solid #e7e5e4; border-radius: 0.6rem;
-    box-shadow: 0 10px 30px rgba(0,0,0,0.12); padding: 0.25rem; min-width: 7rem; }}
+    box-shadow: 0 10px 30px rgba(0,0,0,0.12); padding: 0.25rem; min-width: 7rem; max-height: 60vh; overflow-y: auto; }}
   .measure-menu[hidden] {{ display: none; }}
   .measure-menu button {{ display: block; width: 100%; text-align: left; padding: 7px 10px; font-size: 14px; border-radius: 0.4rem;
     font-variant-numeric: tabular-nums; color: #44403c; background: transparent; border: 0; font-family: Inter, system-ui, sans-serif; }}
@@ -1014,7 +1017,7 @@ def recipe_page(recipe_id: int, db: Session = Depends(get_session)) -> HTMLRespo
                 # data-qty + data-unit drive the serving-scaler JS: when
                 # the user bumps the SERVES stepper, JS walks .ing-qty
                 # nodes and multiplies by the new factor in place.
-                qty = Measure.of(i.qty, i.unit).html("font-medium text-stone-900 ing-qty") + " "
+                qty = Measure.of(i.qty, i.unit, i.display_name).html("font-medium text-stone-900 ing-qty") + " "
             prep = f", {_h(i.prep_note)}" if i.prep_note else ""
             opt = " <span class='text-stone-400'>(optional)</span>" if i.optional else ""
             cat_pill = (
@@ -4345,7 +4348,7 @@ def shop_page(db: Session = Depends(get_session), view: str = "") -> HTMLRespons
         struck = " line-through text-stone-400" if is_checked else ""
         # Each part is a Measure: tap a cup/g amount for the unit dropdown.
         # Shop-only displays ("1 bag", "2 cup + 250 g") stay as written.
-        total = Measure.of(it.qty, it.unit)
+        total = Measure.of(it.qty, it.unit, it.display_name)
         if own_qty is not None:
             inner = " + ".join(m.html() for m in own_qty)
         elif not it.display_qty or it.display_qty == total.text():
@@ -4359,7 +4362,7 @@ def shop_page(db: Session = Depends(get_session), view: str = "") -> HTMLRespons
         # to expand one line per contributing recipe (linked). Rows fed
         # by several recipes also show the count (×N).
         src_lines = "".join(
-            f"<div>{Measure.of(s.qty, s.unit).html()} · "
+            f"<div>{Measure.of(s.qty, s.unit, it.display_name).html()} · "
             + (
                 f"<a href='{PREFIX}/app/recipe/{s.recipe_id}' class='text-amber-700 hover:underline'>{_h(s.recipe_name)}</a>"
                 if s.recipe_id else _h(s.recipe_name)
@@ -4448,7 +4451,7 @@ def shop_page(db: Session = Depends(get_session), view: str = "") -> HTMLRespons
                 own = [s for s in it.sources if s.recipe_id == rid]
                 if not own:
                     continue
-                own_qty = combine([Measure.of(s.qty, s.unit) for s in own])
+                own_qty = combine([Measure.of(s.qty, s.unit, it.display_name) for s in own])
                 others = sorted({s.recipe_name for s in it.sources if s.recipe_id != rid})
                 is_checked = f"{it.canonical_name}|{it.unit}" in checked_keys
                 mine.append((is_checked, _aggregated_row(it, own_qty=own_qty, also=", ".join(others))))

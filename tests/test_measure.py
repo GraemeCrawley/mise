@@ -26,3 +26,20 @@ def test_combine_sums_same_dimension_only():
     assert [m.text() for m in combine([Measure.of(2, "tbsp"), Measure.of(1, "tbsp")])] == ["3 tbsp"]
     parts = combine([Measure.of(1, "cup"), Measure.of(250, "g"), Measure.of(2, "tbsp")])
     assert [m.unit for m in parts] == ["cup", "g"] and round(parts[0].qty, 3) == 1.125
+
+
+def test_volume_and_weight_convert_with_a_known_ingredient():
+    milk = Measure.of(0.875, "cup", "sweetened condensed milk")
+    assert milk.to("g").text() == "268 g"
+    assert "g" in [m.unit for m in milk.alternatives()]
+    assert round(Measure.of(120, "g", "all-purpose flour").to("cup").qty, 2) == 1.0
+    assert "data-density" in milk.html()
+
+
+def test_longest_ingredient_name_wins_and_unknown_gets_no_weight():
+    from mise.services.measure import density_for
+    assert round(density_for("coconut milk") * 236.588) == 226
+    assert round(density_for("light brown sugar") * 236.588) == 213
+    assert density_for("unsalted butter") == density_for("butter")
+    assert density_for("gochujang") is None
+    assert "g" not in [m.unit for m in Measure.of(1, "cup", "gochujang").alternatives()]
