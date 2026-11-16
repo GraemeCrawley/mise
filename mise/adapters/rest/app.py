@@ -2209,8 +2209,10 @@ def _week_cell(s) -> str:
 
 
 @router.get("/app/plan/session", response_class=HTMLResponse)
-def plan_session_page(db: Session = Depends(get_session)) -> HTMLResponse:
-    from mise.services import weekplan
+def plan_session_page(request: Request, db: Session = Depends(get_session)) -> HTMLResponse:
+    import secrets
+
+    from mise.services import votes, weekplan
     from mise.services.reminders import household_today
     today = household_today(db)
     shown, nw = weekplan.planning_days(today)
@@ -2219,6 +2221,11 @@ def plan_session_page(db: Session = Depends(get_session)) -> HTMLResponse:
     view = planner_service.get_view(start, (end - start).days + 1, db)
     prep_default = weekplan.default_prep_day(db, nw)
     open_count = len(weekplan.uncovered(db, [d.date for d in view]))
+    # Phones are anonymous: a random id in a cookie tells one ballot from another.
+    device = request.cookies.get("mise_device") or secrets.token_urlsafe(12)
+    vote_week = votes.week_of(nw[0])
+    tally, voters = votes.tally(db, vote_week)
+    my_picks = votes.mine(db, vote_week, device)
 
     rows = []
     for day in view:
@@ -2232,15 +2239,17 @@ def plan_session_page(db: Session = Depends(get_session)) -> HTMLResponse:
 
     hh = db.exec(select(Household)).first() or Household()
     recipes = sorted(db.exec(select(Recipe).where(Recipe.archived == False)).all(),  # noqa: E712
-                     key=lambda r: ("Favourites" not in (r.tags or []), r.display_title().lower()))
+                     key=lambda r: (-tally[r.id], "Favourites" not in (r.tags or []), r.display_title().lower()))
     recipe_rows = "".join(
         f"<button type='button' class='rc-row w-full flex items-center gap-3 px-2 py-2 rounded-lg text-left' "
         f"data-id='{r.id}' data-srv='{r.servings or 2}' data-name='{_h(r.display_title())}' "
         f"data-emoji='{_h(_recipe_emoji(r.name_english or r.name_original, r.emoji))}' "
-        f"data-q='{_h(r.display_title().lower())}'>"
+        f"data-q='{_h(r.display_title().lower())}' data-picked='{1 if r.id in my_picks else ''}'>"
         f"<span class='shrink-0 w-9 h-9 rounded-lg {_recipe_color(r.id)} flex items-center justify-center'>"
         f"{_recipe_emoji(r.name_english or r.name_original, r.emoji)}</span>"
         f"<span class='flex-1 min-w-0 truncate serif'>{_h(r.display_title())}</span>"
+        f"<span class='rc-tick shrink-0 text-sm font-medium' style='color:#B45309'></span>"
+        f"<span class='shrink-0 text-xs font-medium' style='color:#B45309'>{f'{_vote_dots(tally[r.id])} {tally[r.id]}' if tally[r.id] else ''}</span>"
         f"<span class='text-rose-500 text-sm'>{'♥' if 'Favourites' in (r.tags or []) else ''}</span></button>"
         for r in recipes if r.servings)
     day_chips = "".join(
@@ -2248,6 +2257,18 @@ def plan_session_page(db: Session = Depends(get_session)) -> HTMLResponse:
         f"style='{'background:#B45309;color:white;border-color:#B45309' if d == prep_default else 'background:white;border-color:#E7E5E4'}'>"
         f"<div class='text-sm font-medium'>{d.strftime('%a')}</div><div style='font-size:10px' class='opacity-75'>{d.strftime('%-d')}</div></button>"
         for d in nw)
+
+    by_id = {r.id: r for r in recipes}
+    mine_html = "".join(
+        f"<span class='inline-flex items-center gap-1 rounded-full px-3 py-1 text-sm bg-white border border-stone-200'>"
+        f"{_recipe_emoji(by_id[i].name_english or by_id[i].name_original, by_id[i].emoji)} {_h(by_id[i].display_title())}</span>"
+        for i in my_picks if i in by_id) or "<span class='text-sm text-stone-400'>None yet.</span>"
+    tally_html = "".join(
+        f"<div class='flex items-center gap-3 py-1'><span class='flex-1 min-w-0 truncate serif'>{_h(by_id[i].display_title())}</span>"
+        f"<span class='text-sm' style='color:#B45309'>{_vote_dots(n)} {n}</span></div>"
+        for i, n in tally.most_common() if i in by_id)
+    vote_status = ("No one has voted yet." if not voters else
+                   f"{voters} phone{'s' if voters != 1 else ''} voted. Top picks show first when you choose recipes.")
 
     def prep_card(meal: str, when: str) -> str:
         return f"""
@@ -2285,8 +2306,20 @@ def plan_session_page(db: Session = Depends(get_session)) -> HTMLResponse:
         <div class="space-y-2 mt-1">{''.join(rows)}</div>
       </div>
 
+      <div class="card p-4 mt-4" id="vote">
+        <div class="flex items-baseline justify-between">
+          <div class="serif text-lg font-medium">2 · Vote</div>
+          <div class="text-xs text-stone-500">optional</div>
+        </div>
+        <p class="text-xs text-stone-500 mt-1">Each phone picks up to {votes.MAX_VOTES} recipes it wants. {vote_status}</p>
+        <div class="text-xs uppercase text-stone-400 mt-3" style="letter-spacing:0.12em">This phone's picks · {len(my_picks)}/{votes.MAX_VOTES}</div>
+        <div class="flex flex-wrap gap-2 mt-2">{mine_html}</div>
+        <button type="button" id="vt-open" class="mt-3 w-full rounded-xl py-2 text-sm font-medium" style="background:#FEF3C7;color:#92400E">{'Change my picks' if my_picks else f'Pick my top {votes.MAX_VOTES}'}</button>
+        {f'<div class="mt-3 pt-2" style="border-top:1px solid #E7E5E4"><div class="text-xs uppercase text-stone-400 mb-1" style="letter-spacing:0.12em">Tally</div>{tally_html}</div>' if tally_html else ''}
+      </div>
+
       <div class="card p-4 mt-4">
-        <div class="serif text-lg font-medium">2 · Prep day</div>
+        <div class="serif text-lg font-medium">3 · Prep day</div>
         <p class="text-xs text-stone-500 mt-1">Cook two meals in one go: one for lunches, one for dinners.</p>
         <div class="grid gap-1 mt-3" style="grid-template-columns:repeat(7,minmax(0,1fr))">{day_chips}</div>
         {prep_card("lunch", "from the next day")}
@@ -2313,6 +2346,7 @@ def plan_session_page(db: Session = Depends(get_session)) -> HTMLResponse:
           <input id="sh-q" type="search" placeholder="Search recipes…" autocomplete="off"
                  class="mt-3 w-full border border-stone-200 rounded-lg px-3 py-2 bg-white text-base">
           <div id="sh-list" class="mt-2" style="flex:1 1 0;min-height:0;overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch">{recipe_rows}</div>
+          <button type="button" id="sh-done" class="mt-2 w-full text-white font-medium py-3 rounded-xl" style="display:none;background:#1C1917">Done</button>
         </div>
       </div>
 
@@ -2336,11 +2370,15 @@ def plan_session_page(db: Session = Depends(get_session)) -> HTMLResponse:
         function openSheet(c, title) {{
           ctx = c; $('#sh-title').textContent = title;
           $('#sh-status').style.display = c.kind === 'slot' ? '' : 'none';
+          $('#sh-done').style.display = c.kind === 'vote' ? '' : 'none';
+          paintTicks();
           $('#sh-q').value = ''; filter('');
           $('#sh').style.display = 'block'; $('#sh-list').scrollTop = 0; lockPage();
           const fab = document.getElementById('fb-fab'); if (fab) fab.style.display = 'none';
         }}
-        function closeSheet() {{ $('#sh').style.display = 'none'; unlockPage(); ctx = null;
+        function closeSheet() {{ const wasVote = ctx && ctx.kind === 'vote';
+          $('#sh').style.display = 'none'; unlockPage(); ctx = null;
+          if (wasVote && voteChanged) {{ reloadTo('vote'); return; }}
           const fab = document.getElementById('fb-fab'); if (fab) fab.style.display = ''; }}
         // iPhone ignores overflow:hidden on the page, so a drag outside the list
         // scrolled the page behind and then the list stopped taking touches.
@@ -2366,8 +2404,24 @@ def plan_session_page(db: Session = Depends(get_session)) -> HTMLResponse:
           try {{ await post('/plan/status', {{ date: ctx.date, meal: ctx.meal, status: b.dataset.status }}); reloadTo('week'); }}
           catch (e) {{ fail(e); }}
         }}));
+        // ---- voting: the sheet in 'vote' mode ticks recipes instead of placing them
+        let voteChanged = false;
+        const VOTE_WEEK = '{vote_week.isoformat()}', MAXV = {votes.MAX_VOTES};
+        const nPicked = () => document.querySelectorAll('.rc-row[data-picked="1"]').length;
+        function paintTicks() {{ const on = ctx && ctx.kind === 'vote';
+          document.querySelectorAll('.rc-row').forEach(r => r.querySelector('.rc-tick').textContent = on && r.dataset.picked ? '✓' : '');
+          if (on) $('#sh-title').textContent = 'Your top ' + MAXV + ' · ' + nPicked() + '/' + MAXV; }}
+        $('#vt-open').addEventListener('click', () => openSheet({{ kind: 'vote' }}, ''));
+        $('#sh-done').addEventListener('click', closeSheet);
         document.querySelectorAll('.rc-row').forEach(r => r.addEventListener('click', async () => {{
           if (!ctx) return;
+          if (ctx.kind === 'vote') {{
+            try {{ const d = await post('/plan/vote', {{ week: VOTE_WEEK, recipe_id: +r.dataset.id }});
+              document.querySelectorAll('.rc-row').forEach(x => x.dataset.picked = d.mine.includes(+x.dataset.id) ? '1' : '');
+              voteChanged = true; paintTicks(); }}
+            catch (e) {{ fail(e); }}
+            return;
+          }}
           if (ctx.kind === 'slot') {{
             try {{ await post('/plan/place', {{ recipe_id: +r.dataset.id, date: ctx.date, meal: ctx.meal }}); reloadTo('week'); }}
             catch (e) {{ fail(e); }}
@@ -2429,7 +2483,16 @@ def plan_session_page(db: Session = Depends(get_session)) -> HTMLResponse:
       }})();
       </script>
     """
-    return HTMLResponse(_shell("Plan the week", body, active="plan"))
+    resp = HTMLResponse(_shell("Plan the week", body, active="plan"))
+    if "mise_device" not in request.cookies:
+        resp.set_cookie("mise_device", device, max_age=5 * 365 * 86400, path="/",
+                        secure=request.url.scheme == "https" or request.headers.get("x-forwarded-proto") == "https",
+                        httponly=True, samesite="lax")
+    return resp
+
+
+def _vote_dots(n: int) -> str:
+    return "●" * min(n, 4) if n else ""
 
 
 def _note_icon(text: str) -> str:

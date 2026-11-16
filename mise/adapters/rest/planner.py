@@ -9,7 +9,7 @@ from __future__ import annotations
 
 from datetime import date as _date
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Request
 from pydantic import BaseModel
 from sqlmodel import Session
 
@@ -267,3 +267,22 @@ def fill_prep(body: PrepIn, db: Session = Depends(get_session)) -> dict:
         db.rollback()
         raise HTTPException(status_code=400, detail=str(e)) from e
     return {"placed": len(sessions)}
+
+
+class VoteIn(BaseModel):
+    week: _date
+    recipe_id: int
+
+
+@router.post("/vote", status_code=200)
+def vote(body: VoteIn, request: Request, db: Session = Depends(get_session)) -> dict:
+    """Toggle this phone's pick. The phone is the `mise_device` cookie."""
+    from mise.services import votes
+    try:
+        picks = votes.toggle(db, votes.week_of(body.week), request.cookies.get("mise_device", ""),
+                             body.recipe_id)
+        db.commit()
+    except ValueError as e:
+        db.rollback()
+        raise HTTPException(status_code=400, detail=str(e)) from e
+    return {"mine": picks}

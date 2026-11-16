@@ -295,6 +295,20 @@ class PlanNote(SQLModel, table=True):
     created_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
 
 
+class RecipeVote(SQLModel, table=True):
+    """One phone's pick for the week being planned (up to 4 per phone).
+    Phones are anonymous: `device` is a random id kept in a cookie."""
+    __table_args__ = (
+        UniqueConstraint("week", "device", "recipe_id", name="uq_vote_per_phone"),
+    )
+
+    id: int | None = Field(default=None, primary_key=True)
+    week: _Date = Field(index=True)  # Monday of the week being planned
+    device: str = Field(index=True)
+    recipe_id: int = Field(foreign_key="recipe.id")
+    created_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
+
+
 # --- template -------------------------------------------------------------
 
 
