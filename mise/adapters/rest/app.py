@@ -2296,8 +2296,8 @@ def plan_session_page(db: Session = Depends(get_session)) -> HTMLResponse:
       <a href="{PREFIX}/app/shop" class="mt-4 block card text-center py-4 serif italic text-lg matte-emerald">Shopping list →</a>
       <div style="height:6rem"></div>
 
-      <div id="sh" style="display:none;position:fixed;inset:0;z-index:60;background:rgba(28,25,23,0.45)">
-        <div style="position:absolute;left:0;right:0;bottom:0;height:75vh;display:flex;flex-direction:column;background:#FAF7F2;border-radius:1.25rem 1.25rem 0 0;padding:1rem 1rem 1.5rem">
+      <div id="sh" style="display:none;position:fixed;inset:0;z-index:60;animation:none;transform:none;opacity:1;background:rgba(28,25,23,0.45)">
+        <div id="sh-panel" style="position:absolute;left:0;right:0;bottom:0;top:calc(env(safe-area-inset-top) + 0.75rem);display:flex;flex-direction:column;background:#FAF7F2;border-radius:1.25rem 1.25rem 0 0;padding:1rem 1rem calc(0.5rem + env(safe-area-inset-bottom))">
           <div class="flex items-center justify-between">
             <div id="sh-title" class="serif text-xl font-medium"></div>
             <button type="button" id="sh-x" class="text-stone-400 text-2xl leading-none px-2" aria-label="Close">×</button>
@@ -2310,7 +2310,7 @@ def plan_session_page(db: Session = Depends(get_session)) -> HTMLResponse:
           </div>
           <input id="sh-q" type="search" placeholder="Search recipes…" autocomplete="off"
                  class="mt-3 w-full border border-stone-200 rounded-lg px-3 py-2 bg-white text-base">
-          <div id="sh-list" class="mt-2" style="overflow-y:auto;-webkit-overflow-scrolling:touch">{recipe_rows}</div>
+          <div id="sh-list" class="mt-2" style="flex:1 1 0;min-height:0;overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch">{recipe_rows}</div>
         </div>
       </div>
 
@@ -2335,11 +2335,21 @@ def plan_session_page(db: Session = Depends(get_session)) -> HTMLResponse:
           ctx = c; $('#sh-title').textContent = title;
           $('#sh-status').style.display = c.kind === 'slot' ? '' : 'none';
           $('#sh-q').value = ''; filter('');
-          $('#sh').style.display = 'block'; document.body.style.overflow = 'hidden';
+          $('#sh').style.display = 'block'; $('#sh-list').scrollTop = 0; lockPage();
           const fab = document.getElementById('fb-fab'); if (fab) fab.style.display = 'none';
         }}
-        function closeSheet() {{ $('#sh').style.display = 'none'; document.body.style.overflow = ''; ctx = null;
+        function closeSheet() {{ $('#sh').style.display = 'none'; unlockPage(); ctx = null;
           const fab = document.getElementById('fb-fab'); if (fab) fab.style.display = ''; }}
+        // iPhone ignores overflow:hidden on the page, so a drag outside the list
+        // scrolled the page behind and then the list stopped taking touches.
+        // Pin the page in place and only let the list itself move.
+        let savedY = 0;
+        function lockPage() {{ savedY = window.scrollY; const b = document.body.style;
+          b.position = 'fixed'; b.top = -savedY + 'px'; b.left = '0'; b.right = '0'; b.overflow = 'hidden'; }}
+        function unlockPage() {{ const b = document.body.style;
+          b.position = b.top = b.left = b.right = b.overflow = ''; window.scrollTo(0, savedY); }}
+        $('#sh').addEventListener('touchmove', e => {{
+          if (!e.target.closest('#sh-list')) e.preventDefault(); }}, {{ passive: false }});
         $('#sh-x').addEventListener('click', closeSheet);
         $('#sh').addEventListener('click', e => {{ if (e.target.id === 'sh') closeSheet(); }});
         function filter(q) {{ q = q.trim().toLowerCase();
