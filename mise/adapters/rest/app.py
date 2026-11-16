@@ -234,7 +234,7 @@ _APP_CSS = f"""
 <link rel="apple-touch-icon" href="{PREFIX}/static/icon-180.png">
 <link rel="icon" type="image/svg+xml" href="{PREFIX}/static/icon.svg">
 <script>window.MISE_UNITS = {units_json()};</script>
-<script src="{PREFIX}/static/measure.js?v=3" defer></script>
+<script src="{PREFIX}/static/measure.js?v=4" defer></script>
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="theme-color" content="#FAF7F2">
@@ -251,6 +251,28 @@ _APP_CSS = f"""
   .measure-menu button {{ display: block; width: 100%; text-align: left; padding: 7px 10px; font-size: 14px; border-radius: 0.4rem;
     font-variant-numeric: tabular-nums; color: #44403c; background: transparent; border: 0; font-family: Inter, system-ui, sans-serif; }}
   .measure-menu button.is-current {{ background: #FDE68A; color: #78350F; font-weight: 600; }}
+  .measure-menu .measure-calc-open {{ display: flex; align-items: center; gap: 6px; margin-top: 2px; border-top: 1px solid #f5f5f4;
+    border-radius: 0 0 0.4rem 0.4rem; color: #78716c; }}
+  .measure-calc {{ position: fixed; inset: 0; z-index: 95; background: rgba(28,25,23,0.35); display: flex; align-items: flex-end; justify-content: center; }}
+  .measure-calc[hidden] {{ display: none; }}
+  .measure-calc .mc-panel {{ width: 100%; max-width: 26rem; background: #FAF7F2; border-radius: 1.1rem 1.1rem 0 0;
+    padding: 0.75rem 1rem calc(1rem + env(safe-area-inset-bottom)); box-shadow: 0 -10px 30px rgba(0,0,0,0.15); font-family: Inter, system-ui, sans-serif; }}
+  .measure-calc .mc-head {{ display: flex; justify-content: space-between; align-items: center; color: #78716c; font-size: 13px; font-weight: 600; }}
+  .measure-calc .mc-head span {{ display: flex; align-items: center; gap: 6px; }}
+  .measure-calc .mc-head button {{ border: 0; background: transparent; font-size: 16px; color: #78716c; padding: 4px 8px; }}
+  .measure-calc .mc-expr {{ min-height: 1.25rem; margin-top: 0.5rem; text-align: right; color: #a8a29e; font-size: 14px;
+    font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }}
+  .measure-calc .mc-out {{ text-align: right; font-family: Fraunces, serif; font-size: 2.2rem; font-weight: 600; color: #1c1917;
+    font-variant-numeric: tabular-nums; line-height: 1.2; overflow-wrap: anywhere; }}
+  .measure-calc .mc-units {{ display: flex; gap: 6px; overflow-x: auto; padding: 0.5rem 0; scrollbar-width: none; }}
+  .measure-calc .mc-units button {{ flex: none; border: 1px solid #e7e5e4; background: #fff; border-radius: 999px; padding: 4px 11px;
+    font-size: 13px; color: #57534e; touch-action: manipulation; }}
+  .measure-calc .mc-units button.is-current {{ background: #FDE68A; border-color: #FCD34D; color: #78350F; font-weight: 600; }}
+  .measure-calc .mc-keys {{ display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-top: 0.25rem; }}
+  .measure-calc .mc-keys button {{ height: 3.1rem; border: 0; border-radius: 0.8rem; background: #fff; font-size: 20px; color: #1c1917;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.06); touch-action: manipulation; font-family: Inter, system-ui, sans-serif; }}
+  .measure-calc .mc-keys button.is-op {{ background: #F5F0E6; color: #92400E; font-weight: 600; }}
+  .measure-calc .mc-keys button[data-k="="] {{ background: #F59E0B; color: #fff; }}
   body {{
     font-family: 'Inter', system-ui, sans-serif;
     -webkit-font-smoothing: antialiased;
