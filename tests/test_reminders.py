@@ -113,7 +113,10 @@ def test_today_uses_household_time_zone(session, household):
 
 
 def test_badge_endpoint_counts_gaps(client, session, household):
-    assert client.get("/push/badge").json()["count"] == 4
+    j = client.get("/push/badge").json()
+    assert j["count"] == 4
+    assert {k: j["gaps"][0][k] for k in ("meal", "day")} == {"meal": "lunch", "day": "Tomorrow"}
+    assert [g["meal"] for g in j["gaps"]] == ["lunch", "dinner", "lunch", "dinner"]
 
 
 # 2026-06-04 is a Thursday; 23:00 UTC = 19:00 Toronto.

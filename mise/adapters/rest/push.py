@@ -32,9 +32,13 @@ def _by_endpoint(db: Session, endpoint: str | None) -> PushSubscription | None:
 @router.get("/push/badge")
 def push_badge(db: Session = Depends(get_session)) -> dict:
     """How many meals in the next two days are unplanned; the app shows it
-    as the red number on the icon each time it opens."""
+    as the red number on the icon and a banner each time it opens."""
     from mise.services import reminders
-    return {"count": len(reminders.empty_meals(db, reminders.household_today(db)))}
+    today = reminders.household_today(db)
+    gaps = reminders.empty_meals(db, today)
+    return {"count": len(gaps),
+            "gaps": [{"date": d.isoformat(), "meal": m, "day": reminders._day_name(d, today)}
+                     for d, m in gaps]}
 
 
 @router.get("/push/prefs")

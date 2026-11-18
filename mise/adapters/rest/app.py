@@ -684,6 +684,14 @@ def _shell(title: str, body: str, active: str = "library") -> str:
       <a href="{PREFIX}/app/tools" class="text-xs text-stone-500 hover:text-stone-900">More ↗</a>
     </div>
   </header>
+  <!-- Unplanned meals in the next two days, filled in by the badge sync below. -->
+  <div id="gap-banner" hidden class="max-w-2xl mx-auto px-5 pt-3">
+    <a id="gap-link" href="{PREFIX}/app/plan" style="display:flex;align-items:center;gap:0.6rem;background:#FEF3C7;border:1px solid #FCD34D;border-radius:0.9rem;padding:0.6rem 0.85rem;color:#78350F;font-size:0.875rem;">
+      <span aria-hidden="true">🍽️</span>
+      <span id="gap-text" style="flex:1;"></span>
+      <span style="font-weight:600;white-space:nowrap;">Plan it →</span>
+    </a>
+  </div>
   <!-- A2HS hint — shown once to iOS Safari visitors so they install. -->
   <div id="a2hs-hint" hidden
        class="max-w-2xl mx-auto px-5 pt-3 text-xs text-amber-900">
@@ -746,10 +754,31 @@ def _shell(title: str, body: str, active: str = "library") -> str:
       }}
       // Red number on the icon = unplanned meals in the next two days.
       // Refreshed whenever the app comes to the front.
-      if ('setAppBadge' in navigator && !location.pathname.endsWith('/notify-test')) {{
+      // Also shown as a banner under the header, linking to the first gap.
+      if (!location.pathname.endsWith('/notify-test')) {{
+        const banner = document.getElementById('gap-banner');
+        const showGaps = gaps => {{
+          if (!banner) return;
+          banner.hidden = !gaps.length;
+          if (!gaps.length) return;
+          // "Thursday's lunch and dinner", "Tomorrow's dinner and Thursday's lunch"
+          const byDay = [];
+          for (const g of gaps) {{
+            const last = byDay[byDay.length - 1];
+            if (last && last.day === g.day) last.meals.push(g.meal); else byDay.push({{ day: g.day, meals: [g.meal] }});
+          }}
+          const parts = byDay.map(d => `${{d.day}}'s ${{d.meals.join(' and ')}}`);
+          const list = parts.length > 1 ? parts.slice(0, -1).join(', ') + ' and ' + parts[parts.length - 1] : parts[0];
+          document.getElementById('gap-text').textContent = `${{list}} ${{gaps.length > 1 ? "aren't" : "isn't"}} planned`;
+          document.getElementById('gap-link').href = '{PREFIX}/app/plan?start=' + gaps[0].date;
+        }};
         const syncBadge = () => fetch('{PREFIX}/push/badge', {{ credentials: 'include', redirect: 'manual' }})
           .then(r => r.ok ? r.json() : null)
-          .then(j => {{ if (!j) return; return j.count > 0 ? navigator.setAppBadge(j.count) : navigator.clearAppBadge(); }})
+          .then(j => {{
+            if (!j) return;
+            showGaps(j.gaps || []);
+            if ('setAppBadge' in navigator) return j.count > 0 ? navigator.setAppBadge(j.count) : navigator.clearAppBadge();
+          }})
           .catch(() => {{}});
         syncBadge();
         document.addEventListener('visibilitychange', () => {{ if (!document.hidden) syncBadge(); }});
