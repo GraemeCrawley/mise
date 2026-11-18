@@ -788,9 +788,21 @@ def _shell(title: str, body: str, active: str = "library") -> str:
       // shows the saved copy first, so drop that copy before reloading.
       (function() {{
         let startY = 0, pulling = false;
+        // A spoon that turns as you pull, then stirs the pot while the
+        // fresh page loads.
+        const style = document.createElement('style');
+        style.textContent = '@keyframes ptr-stir {{ 0% {{ transform: rotate(-25deg) translateX(-3px); }} 50% {{ transform: rotate(25deg) translateX(3px); }} 100% {{ transform: rotate(-25deg) translateX(-3px); }} }}'
+          + '@keyframes ptr-steam {{ 0% {{ opacity: 0; transform: translateY(4px); }} 40% {{ opacity: 1; }} 100% {{ opacity: 0; transform: translateY(-10px); }} }}'
+          + '.ptr-stirring .ptr-spoon {{ animation: ptr-stir 0.5s ease-in-out infinite; }}'
+          + '.ptr-steam {{ opacity: 0; display: inline-block; }} .ptr-stirring .ptr-steam {{ animation: ptr-steam 0.9s ease-out infinite; }}';
+        document.head.appendChild(style);
         const indicator = document.createElement('div');
-        indicator.style.cssText = 'position:fixed;left:50%;top:0;transform:translateX(-50%) translateY(-100%);background:#FDE68A;color:#78350F;padding:calc(10px + env(safe-area-inset-top)) 18px 10px;border-radius:0 0 12px 12px;font-size:13px;font-weight:600;z-index:200;transition:transform 0.18s ease;pointer-events:none;';
-        indicator.textContent = '↓ Pull to refresh';
+        indicator.style.cssText = 'position:fixed;left:50%;top:0;transform:translateX(-50%) translateY(-100%);background:#FDE68A;color:#78350F;padding:calc(10px + env(safe-area-inset-top)) 18px 10px;border-radius:0 0 16px 16px;font-size:13px;font-weight:600;z-index:200;transition:transform 0.18s ease;pointer-events:none;display:flex;align-items:center;gap:8px;white-space:nowrap;box-shadow:0 8px 20px -8px rgba(120,80,40,0.35);';
+        indicator.innerHTML = '<span style="position:relative;display:inline-flex;align-items:flex-end;font-size:20px;line-height:1;">'
+          + '<span class="ptr-steam" style="position:absolute;left:4px;top:-12px;font-size:11px;">♨</span>'
+          + '<span class="ptr-spoon" style="display:inline-block;transform-origin:50% 90%;">🥄</span><span>🍲</span></span>'
+          + '<span class="ptr-text">Pull to stir things up</span>';
+        const text = indicator.querySelector('.ptr-text'), spoon = indicator.querySelector('.ptr-spoon');
         document.body.appendChild(indicator);
         // Not while a sheet has locked the page, or inside a scrolled panel.
         const blocked = (t) => {{
@@ -813,17 +825,22 @@ def _shell(title: str, body: str, active: str = "library") -> str:
           if (dy <= 0) return hide();
           const p = Math.min(1, dy / 80);
           indicator.style.transform = `translateX(-50%) translateY(${{(p * 100 - 100)}}%)`;
-          indicator.textContent = p >= 1 ? '↻ Release to refresh' : '↓ Pull to refresh';
+          spoon.style.transform = `rotate(${{-60 + p * 120}}deg)`;
+          text.textContent = p >= 1 ? 'Let go to refresh' : 'Pull to stir things up';
         }}, {{ passive: true }});
         document.addEventListener('touchend', async (e) => {{
           if (!pulling) return;
           pulling = false;
           const dy = (e.changedTouches[0]?.clientY ?? startY) - startY;
           if (dy < 80 || window.scrollY > 0) return hide();
-          indicator.textContent = '↻ Refreshing…';
+          spoon.style.transform = '';
+          indicator.classList.add('ptr-stirring');
+          text.textContent = ['Stirring the pot…', 'Fetching fresh ingredients…', 'Tasting for seasoning…'][Math.floor(Math.random() * 3)];
+          const minStir = new Promise(r => setTimeout(r, 600));  // long enough to see it stir
           try {{
             for (const k of await caches.keys()) await (await caches.open(k)).delete(location.href.split('#')[0]);
           }} catch (err) {{}}
+          await minStir;
           location.reload();
         }}, {{ passive: true }});
       }})();
