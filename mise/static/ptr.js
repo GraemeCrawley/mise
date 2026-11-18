@@ -5,7 +5,7 @@
 // Pulling heats a little pot (steam fades in, the spoon swings in);
 // letting go past the line stirs it while the fresh page loads.
 (function () {
-  const LINE = 110;      // px of finger travel needed
+  const LINE = 140;      // px of finger travel needed
   const MIN_STIR = 900;  // ms the stir shows even on a fast reload
 
   const css = document.createElement('style');
@@ -52,6 +52,17 @@
     </svg>
     <span class="ptr-text">Pull to refresh</span>`;
   document.body.appendChild(el);
+  // Haptic tick when the pull crosses the line. iPhones have no vibrate
+  // API, but toggling a native switch control gives a light tap (iOS 18+).
+  const tick = document.createElement('label');
+  tick.setAttribute('aria-hidden', 'true');
+  tick.style.cssText = 'position:fixed;left:-9999px;top:0;opacity:0;pointer-events:none;';
+  tick.innerHTML = '<input type="checkbox" switch tabindex="-1">';
+  document.body.appendChild(tick);
+  function nudge() {
+    try { if (navigator.vibrate) navigator.vibrate(12); } catch (e) {}
+    try { tick.click(); } catch (e) {}
+  }
   const text = el.querySelector('.ptr-text');
   const spoon = el.querySelector('.spoon');
   const steam = el.querySelectorAll('.steam path');
@@ -92,6 +103,7 @@
     if (ready !== el.classList.contains('ready')) {
       el.classList.toggle('ready', ready);
       text.textContent = ready ? 'Let go to refresh' : 'Pull to refresh';
+      if (ready) nudge();
     }
   }, { passive: true });
 
