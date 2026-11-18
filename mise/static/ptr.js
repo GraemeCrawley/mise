@@ -52,18 +52,6 @@
     </svg>
     <span class="ptr-text">Pull to refresh</span>`;
   document.body.appendChild(el);
-  // Haptic tick on letting go past the line. iPhones have no vibrate API,
-  // but toggling a native switch control gives a light tap (iOS 18+), and
-  // only from a finger-up event: mid-drag it does nothing.
-  const tick = document.createElement('label');
-  tick.setAttribute('aria-hidden', 'true');
-  tick.style.cssText = 'position:fixed;left:-9999px;top:0;opacity:0;pointer-events:none;';
-  tick.innerHTML = '<input type="checkbox" switch tabindex="-1">';
-  document.body.appendChild(tick);
-  function nudge() {
-    try { if (navigator.vibrate) navigator.vibrate(12); } catch (e) {}
-    try { tick.click(); } catch (e) {}
-  }
   const text = el.querySelector('.ptr-text');
   const spoon = el.querySelector('.spoon');
   const steam = el.querySelectorAll('.steam path');
@@ -113,7 +101,6 @@
     const dy = (e.changedTouches[0]?.clientY ?? startY) - startY;
     if (dy < LINE || window.scrollY > 0) return hide();
     busy = true;
-    nudge();
     spoon.style.transform = '';
     steam.forEach(s => { s.style.opacity = ''; });
     el.classList.remove('ready');
