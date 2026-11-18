@@ -13,7 +13,7 @@
  *     forces a refresh on the next activate.
  */
 
-const CACHE_NAME  = 'mise-app-v43';
+const CACHE_NAME  = 'mise-app-v44';
 const QUEUE_DB    = 'mise-sync-v1';
 const QUEUE_STORE = 'pending';
 

@@ -783,6 +783,50 @@ def _shell(title: str, body: str, active: str = "library") -> str:
         syncBadge();
         document.addEventListener('visibilitychange', () => {{ if (!document.hidden) syncBadge(); }});
       }}
+      // Pull-to-refresh on every page: drag the top down ≥80px and let go.
+      // The installed app has no browser reload, and the service worker
+      // shows the saved copy first, so drop that copy before reloading.
+      (function() {{
+        let startY = 0, pulling = false;
+        const indicator = document.createElement('div');
+        indicator.style.cssText = 'position:fixed;left:50%;top:0;transform:translateX(-50%) translateY(-100%);background:#FDE68A;color:#78350F;padding:calc(10px + env(safe-area-inset-top)) 18px 10px;border-radius:0 0 12px 12px;font-size:13px;font-weight:600;z-index:200;transition:transform 0.18s ease;pointer-events:none;';
+        indicator.textContent = '↓ Pull to refresh';
+        document.body.appendChild(indicator);
+        // Not while a sheet has locked the page, or inside a scrolled panel.
+        const blocked = (t) => {{
+          if (document.body.style.position === 'fixed') return true;
+          for (let el = t; el && el !== document.body; el = el.parentElement) {{
+            if (el.scrollTop > 0) return true;
+            const pos = getComputedStyle(el).position;
+            if (pos === 'fixed') return true;
+          }}
+          return false;
+        }};
+        const hide = () => {{ indicator.style.transform = 'translateX(-50%) translateY(-100%)'; }};
+        document.addEventListener('touchstart', (e) => {{
+          pulling = window.scrollY <= 0 && !blocked(e.target);
+          startY = e.touches[0].clientY;
+        }}, {{ passive: true }});
+        document.addEventListener('touchmove', (e) => {{
+          if (!pulling) return;
+          const dy = e.touches[0].clientY - startY;
+          if (dy <= 0) return hide();
+          const p = Math.min(1, dy / 80);
+          indicator.style.transform = `translateX(-50%) translateY(${{(p * 100 - 100)}}%)`;
+          indicator.textContent = p >= 1 ? '↻ Release to refresh' : '↓ Pull to refresh';
+        }}, {{ passive: true }});
+        document.addEventListener('touchend', async (e) => {{
+          if (!pulling) return;
+          pulling = false;
+          const dy = (e.changedTouches[0]?.clientY ?? startY) - startY;
+          if (dy < 80 || window.scrollY > 0) return hide();
+          indicator.textContent = '↻ Refreshing…';
+          try {{
+            for (const k of await caches.keys()) await (await caches.open(k)).delete(location.href.split('#')[0]);
+          }} catch (err) {{}}
+          location.reload();
+        }}, {{ passive: true }});
+      }})();
       if ('serviceWorker' in navigator) {{
         navigator.serviceWorker.addEventListener('message', (event) => {{
           if (event.data && event.data.type === 'queue-flushed') {{
@@ -4984,42 +5028,6 @@ def shop_page(db: Session = Depends(get_session), view: str = "") -> HTMLRespons
           // first reconciliation even if the page was rendered against
           // stale data.
           setTimeout(syncAgg, 500);
-        }})();
-
-        // Pull-to-refresh — drag the top of the page down ≥80px and
-        // release to reload. Native iOS Safari already has this in
-        // the browser chrome but the PWA install loses it.
-        (function() {{
-          let startY = 0, pulling = false;
-          const indicator = document.createElement('div');
-          indicator.style.cssText = 'position:fixed;left:50%;top:0;transform:translateX(-50%) translateY(-100%);background:#FDE68A;color:#78350F;padding:10px 18px;border-radius:0 0 12px 12px;font-size:13px;font-weight:600;z-index:200;transition:transform 0.18s ease;pointer-events:none;';
-          indicator.textContent = '↓ Pull to refresh';
-          document.body.appendChild(indicator);
-          document.addEventListener('touchstart', (e) => {{
-            if (window.scrollY > 0) {{ pulling = false; return; }}
-            startY = e.touches[0].clientY;
-            pulling = true;
-          }}, {{ passive: true }});
-          document.addEventListener('touchmove', (e) => {{
-            if (!pulling) return;
-            const dy = e.touches[0].clientY - startY;
-            if (dy > 0) {{
-              const p = Math.min(1, dy / 80);
-              indicator.style.transform = `translateX(-50%) translateY(${{(p * 100 - 100)}}%)`;
-              indicator.textContent = p >= 1 ? '↻ Release to refresh' : '↓ Pull to refresh';
-            }}
-          }}, {{ passive: true }});
-          document.addEventListener('touchend', (e) => {{
-            if (!pulling) return;
-            pulling = false;
-            const dy = (e.changedTouches[0]?.clientY ?? startY) - startY;
-            if (dy >= 80 && window.scrollY === 0) {{
-              indicator.textContent = '↻ Refreshing…';
-              location.reload();
-            }} else {{
-              indicator.style.transform = 'translateX(-50%) translateY(-100%)';
-            }}
-          }}, {{ passive: true }});
         }})();
 
         // Extras CRUD against the server.
