@@ -11,12 +11,14 @@
   const css = document.createElement('style');
   css.textContent = `
     .ptr { position: fixed; left: 50%; top: 0; z-index: 200; pointer-events: none;
-      transform: translate(-50%, -110%); display: flex; align-items: center; gap: 10px;
+      transform: translate(-50%, var(--ptr-off)); opacity: 0; display: flex; align-items: center; gap: 10px;
       padding: 8px 18px 8px 10px; margin-top: calc(env(safe-area-inset-top) + 10px);
+      /* Fully off screen: its own height plus the status-bar area and shadow. */
+      --ptr-off: calc(-100% - env(safe-area-inset-top) - 40px);
       background: #fff; color: #78350F; border: 1px solid #FCD34D; border-radius: 999px;
       box-shadow: 0 10px 28px -10px rgba(120,80,40,0.45); font: 600 14px Inter, system-ui, sans-serif;
       white-space: nowrap; }
-    .ptr.settle { transition: transform 0.25s cubic-bezier(.2,.9,.3,1.2); }
+    .ptr.settle { transition: transform 0.25s cubic-bezier(.2,.9,.3,1.2), opacity 0.2s; }
     .ptr svg { width: 38px; height: 38px; overflow: visible; }
     .ptr .spoon { transform-box: view-box; transform-origin: 21px 25px; }
     .ptr .steam path { opacity: 0; }
@@ -54,11 +56,13 @@
   const spoon = el.querySelector('.spoon');
   const steam = el.querySelectorAll('.steam path');
 
-  function place(y, settle) {
+  // p: 0 = hidden above the screen, 1 = fully in view.
+  function place(p, settle) {
     el.classList.toggle('settle', !!settle);
-    el.style.transform = `translate(-50%, ${y})`;
+    el.style.transform = `translate(-50%, calc(var(--ptr-off) * ${(1 - p).toFixed(3)}))`;
+    el.style.opacity = p > 0 ? '1' : '0';
   }
-  const hide = () => { place('-110%', true); el.classList.remove('ready'); };
+  const hide = () => { place(0, true); el.classList.remove('ready'); };
 
   // Not while a sheet has locked the page, or inside a fixed or scrolled panel.
   function blocked(t) {
@@ -81,7 +85,7 @@
     if (dy <= 0) return hide();
     const p = Math.min(1, dy / LINE);
     // Follows the finger with some weight: fully in view at the line.
-    place(`${(-110 + p * 110).toFixed(1)}%`, false);
+    place(p, false);
     spoon.style.transform = `rotate(${(1 - p) * 40}deg)`;
     steam.forEach((s, i) => { s.style.opacity = Math.max(0, p * 1.4 - i * 0.2).toFixed(2); });
     const ready = p >= 1;
@@ -102,7 +106,7 @@
     el.classList.remove('ready');
     el.classList.add('stirring');
     text.textContent = 'Refreshing…';
-    place('0%', true);
+    place(1, true);
     const wait = new Promise(r => setTimeout(r, MIN_STIR));
     try {
       for (const k of await caches.keys()) await (await caches.open(k)).delete(location.href.split('#')[0]);
