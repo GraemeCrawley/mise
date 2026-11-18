@@ -239,6 +239,7 @@ _APP_CSS = f"""
 // navigator.standalone is reliable there.
 if (navigator.standalone === true || matchMedia('(display-mode: standalone)').matches) document.documentElement.classList.add('is-app');</script>
 <script src="{PREFIX}/static/measure.js?v=5" defer></script>
+<script src="{PREFIX}/static/ptr.js?v=1" defer></script>
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="theme-color" content="#FAF7F2">
@@ -783,67 +784,6 @@ def _shell(title: str, body: str, active: str = "library") -> str:
         syncBadge();
         document.addEventListener('visibilitychange', () => {{ if (!document.hidden) syncBadge(); }});
       }}
-      // Pull-to-refresh on every page: drag the top down ≥80px and let go.
-      // The installed app has no browser reload, and the service worker
-      // shows the saved copy first, so drop that copy before reloading.
-      (function() {{
-        let startY = 0, pulling = false;
-        // A spoon that turns as you pull, then stirs the pot while the
-        // fresh page loads.
-        const style = document.createElement('style');
-        style.textContent = '@keyframes ptr-stir {{ 0% {{ transform: rotate(-25deg) translateX(-3px); }} 50% {{ transform: rotate(25deg) translateX(3px); }} 100% {{ transform: rotate(-25deg) translateX(-3px); }} }}'
-          + '@keyframes ptr-steam {{ 0% {{ opacity: 0; transform: translateY(4px); }} 40% {{ opacity: 1; }} 100% {{ opacity: 0; transform: translateY(-10px); }} }}'
-          + '.ptr-stirring .ptr-spoon {{ animation: ptr-stir 0.5s ease-in-out infinite; }}'
-          + '.ptr-steam {{ opacity: 0; display: inline-block; }} .ptr-stirring .ptr-steam {{ animation: ptr-steam 0.9s ease-out infinite; }}';
-        document.head.appendChild(style);
-        const indicator = document.createElement('div');
-        indicator.style.cssText = 'position:fixed;left:50%;top:0;transform:translateX(-50%) translateY(-100%);background:#FDE68A;color:#78350F;padding:calc(10px + env(safe-area-inset-top)) 18px 10px;border-radius:0 0 16px 16px;font-size:13px;font-weight:600;z-index:200;transition:transform 0.18s ease;pointer-events:none;display:flex;align-items:center;gap:8px;white-space:nowrap;box-shadow:0 8px 20px -8px rgba(120,80,40,0.35);';
-        indicator.innerHTML = '<span style="position:relative;display:inline-flex;align-items:flex-end;font-size:20px;line-height:1;">'
-          + '<span class="ptr-steam" style="position:absolute;left:4px;top:-12px;font-size:11px;">♨</span>'
-          + '<span class="ptr-spoon" style="display:inline-block;transform-origin:50% 90%;">🥄</span><span>🍲</span></span>'
-          + '<span class="ptr-text">Pull to stir things up</span>';
-        const text = indicator.querySelector('.ptr-text'), spoon = indicator.querySelector('.ptr-spoon');
-        document.body.appendChild(indicator);
-        // Not while a sheet has locked the page, or inside a scrolled panel.
-        const blocked = (t) => {{
-          if (document.body.style.position === 'fixed') return true;
-          for (let el = t; el && el !== document.body; el = el.parentElement) {{
-            if (el.scrollTop > 0) return true;
-            const pos = getComputedStyle(el).position;
-            if (pos === 'fixed') return true;
-          }}
-          return false;
-        }};
-        const hide = () => {{ indicator.style.transform = 'translateX(-50%) translateY(-100%)'; }};
-        document.addEventListener('touchstart', (e) => {{
-          pulling = window.scrollY <= 0 && !blocked(e.target);
-          startY = e.touches[0].clientY;
-        }}, {{ passive: true }});
-        document.addEventListener('touchmove', (e) => {{
-          if (!pulling) return;
-          const dy = e.touches[0].clientY - startY;
-          if (dy <= 0) return hide();
-          const p = Math.min(1, dy / 80);
-          indicator.style.transform = `translateX(-50%) translateY(${{(p * 100 - 100)}}%)`;
-          spoon.style.transform = `rotate(${{-60 + p * 120}}deg)`;
-          text.textContent = p >= 1 ? 'Let go to refresh' : 'Pull to stir things up';
-        }}, {{ passive: true }});
-        document.addEventListener('touchend', async (e) => {{
-          if (!pulling) return;
-          pulling = false;
-          const dy = (e.changedTouches[0]?.clientY ?? startY) - startY;
-          if (dy < 80 || window.scrollY > 0) return hide();
-          spoon.style.transform = '';
-          indicator.classList.add('ptr-stirring');
-          text.textContent = ['Stirring the pot…', 'Fetching fresh ingredients…', 'Tasting for seasoning…'][Math.floor(Math.random() * 3)];
-          const minStir = new Promise(r => setTimeout(r, 600));  // long enough to see it stir
-          try {{
-            for (const k of await caches.keys()) await (await caches.open(k)).delete(location.href.split('#')[0]);
-          }} catch (err) {{}}
-          await minStir;
-          location.reload();
-        }}, {{ passive: true }});
-      }})();
       if ('serviceWorker' in navigator) {{
         navigator.serviceWorker.addEventListener('message', (event) => {{
           if (event.data && event.data.type === 'queue-flushed') {{

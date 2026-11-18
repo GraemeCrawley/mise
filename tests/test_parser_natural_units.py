@@ -25,3 +25,11 @@ def test_grams_stay_grams():
 def test_unknown_unit_preserved():
     qty, unit, _, _ = to_canonical(1, "smidgen")
     assert unit == "smidgen"
+
+
+def test_range_starting_with_a_fraction_takes_the_low_end(session):
+    # strangetom hands back the string "1.5-2" for "1 ½ - 2 lb" instead of
+    # a number; it used to crash the whole paste.
+    from mise.services.ingredient_parser import parse_line
+    [ing] = parse_line("1 ½ - 2 lb. russet potatoes -about 2 large potatoes peeled", session)
+    assert (ing.qty, ing.unit) == (1.5, "lb")

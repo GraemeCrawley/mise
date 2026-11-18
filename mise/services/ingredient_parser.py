@@ -52,7 +52,7 @@ log = logging.getLogger("mise.parser")
 # Bump on output-schema / extraction-logic change. Cached rows with
 # older versions stay (audit) but writes go to new keys until manually
 # cleaned. v2 = strangetom-backed.
-PARSER_VERSION = "v27"
+PARSER_VERSION = "v28"
 
 _ureg = UnitRegistry()
 
@@ -775,7 +775,13 @@ def _ingredient_from_strangetom(
         q_frac = getattr(a, "quantity", None)
         u = getattr(a, "unit", None)
         if q_frac is not None:
-            q = float(Fraction(q_frac)) if isinstance(q_frac, (int, float, Fraction)) else float(q_frac)
+            if isinstance(q_frac, (int, float, Fraction)):
+                q = float(Fraction(q_frac))
+            else:
+                # Ranges with a decimal end ("1.5-2", from "1 ½ - 2") come
+                # back as a string; take the low end like "1-2" does.
+                m = re.match(r"\s*(\d+(?:\.\d+)?)", str(q_frac))
+                q = float(m.group(1)) if m else 0.0
             unit_str = str(u) if u is not None else "ea"
             qty, unit, original_qty, original_unit = to_canonical(q, unit_str)
 
