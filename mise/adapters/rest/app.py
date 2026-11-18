@@ -239,7 +239,7 @@ _APP_CSS = f"""
 // navigator.standalone is reliable there.
 if (navigator.standalone === true || matchMedia('(display-mode: standalone)').matches) document.documentElement.classList.add('is-app');</script>
 <script src="{PREFIX}/static/measure.js?v=5" defer></script>
-<script src="{PREFIX}/static/ptr.js?v=3" defer></script>
+<script src="{PREFIX}/static/ptr.js?v=4" defer></script>
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="theme-color" content="#FAF7F2">
