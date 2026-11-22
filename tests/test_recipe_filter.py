@@ -31,3 +31,14 @@ def test_library_tag_link_starts_on_that_chip(client, session):
     assert "data-tag='Dessert' aria-pressed='true'" in page
     # Rows are all sent; the browser hides the ones outside the chip.
     assert "Stew" in page
+
+
+def test_time_chips_and_row_minutes(client, session):
+    _seed(session)
+    pie = session.query(Recipe).filter_by(name_english="Pie").one()
+    pie.total_minutes = 25
+    session.add(pie); session.commit()
+    page = client.get("/app/plan").text
+    for m in (30, 45, 60):
+        assert f"data-max='{m}'" in page
+    assert "data-min='25'" in page

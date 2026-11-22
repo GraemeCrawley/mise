@@ -240,7 +240,7 @@ _APP_CSS = f"""
 if (navigator.standalone === true || matchMedia('(display-mode: standalone)').matches) document.documentElement.classList.add('is-app');</script>
 <script src="{PREFIX}/static/measure.js?v=5" defer></script>
 <script src="{PREFIX}/static/ptr.js?v=5" defer></script>
-<script src="{PREFIX}/static/recipe-filter.js?v=1" defer></script>
+<script src="{PREFIX}/static/recipe-filter.js?v=2" defer></script>
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="theme-color" content="#FAF7F2">
@@ -254,6 +254,7 @@ if (navigator.standalone === true || matchMedia('(display-mode: standalone)').ma
   .rf-chips::-webkit-scrollbar {{ display: none; }}
   .rf-chip {{ flex-shrink: 0; font-size: 12px; padding: 4px 12px; border-radius: 999px; background: #f5f5f4; color: #57534e; white-space: nowrap; }}
   .rf-chip[aria-pressed="true"] {{ background: #fef3c7; color: #78350f; font-weight: 500; }}
+  .rf-sep {{ flex-shrink: 0; width: 1px; margin: 4px 2px; background: #d6d3d1; }}
   /* Quantities you can tap for other units (static/measure.js). */
   .measure-tap {{ cursor: pointer; text-decoration: underline dotted #d6d3d1; text-underline-offset: 3px; }}
   .measure-menu {{ position: fixed; z-index: 90; background: #fff; border: 1px solid #e7e5e4; border-radius: 0.6rem;
@@ -829,7 +830,8 @@ def _redirect_to_app_slash() -> RedirectResponse:
 def _rf_attrs(r: Recipe) -> str:
     """Row attributes the shared recipe filter (static/recipe-filter.js) reads."""
     q = " ".join(x for x in (r.name_english, r.name_original, r.display_title()) if x).lower()
-    return f"data-q='{_h(q)}' data-tags='{_h('|'.join(r.tags or []))}'"
+    return (f"data-q='{_h(q)}' data-tags='{_h('|'.join(r.tags or []))}' "
+            f"data-min='{r.total_minutes or ''}'")
 
 
 def _recipe_filter(list_id: str, recipes: list[Recipe], *, placeholder: str = "Search recipes…",
@@ -845,12 +847,16 @@ def _recipe_filter(list_id: str, recipes: list[Recipe], *, placeholder: str = "S
     def chip(label: str, value: str) -> str:
         return (f"<button type='button' class='rf-chip' data-tag='{_h(value)}' "
                 f"aria-pressed='{'true' if value == tag else 'false'}'>{_h(label)}</button>")
-    chips = chip("All", "") + "".join(chip("★ Favourites" if t == "Favourites" else t, t) for t in tags)
+    # Time chips combine with a tag chip ("quick favourites"); 30 counts as <30.
+    times = "".join(f"<button type='button' class='rf-chip rf-time' data-max='{m}' aria-pressed='false'>&lt;{m} min</button>"
+                    for m in (30, 45, 60)) if any(r.total_minutes for r in recipes) else ""
+    chips = (chip("All", "") + times + ("<span class='rf-sep'></span>" if times and tags else "")
+             + "".join(chip("★ Favourites" if t == "Favourites" else t, t) for t in tags))
     return (
         f"<div data-rf='{list_id}'" + (f" data-rf-empty='{empty_id}'" if empty_id else "") + ">"
         f"<input type='search' class='rf-q {input_cls}' value='{_h(q)}' placeholder='{_h(placeholder)}' "
         f"autocomplete='off' enterkeyhint='search'>"
-        + (f"<div class='rf-chips mt-2'>{chips}</div>" if tags else "")
+        + (f"<div class='rf-chips mt-2'>{chips}</div>" if tags or times else "")
         + "</div>"
     )
 

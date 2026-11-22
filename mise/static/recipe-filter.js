@@ -1,36 +1,48 @@
 // The one recipe search + category filter, shared by the Library and the
 // plan pickers. app.py's _recipe_filter() renders the search box and tag
 // chips; they point (data-rf) at a list whose rows carry data-q (name
-// text, lowercase) and data-tags (tags joined by |).
+// text, lowercase), data-tags (tags joined by |) and data-min (total time).
+// One category chip and one time chip can be on at once; All clears both.
 (function () {
   function setup(root) {
     const list = document.getElementById(root.dataset.rf);
     const input = root.querySelector('.rf-q');
-    const chips = root.querySelectorAll('.rf-chip');
+    const chips = root.querySelectorAll('.rf-chip:not(.rf-time)');
+    const times = root.querySelectorAll('.rf-time');
     const empty = root.dataset.rfEmpty && document.getElementById(root.dataset.rfEmpty);
     let tag = root.querySelector('.rf-chip[aria-pressed="true"]')?.dataset.tag || '';
+    let max = 0;
 
     function apply() {
       const q = input.value.trim().toLowerCase();
       let shown = 0;
       list.querySelectorAll('[data-q]').forEach(r => {
         const ok = (!q || r.dataset.q.includes(q))
-          && (!tag || (r.dataset.tags || '').split('|').includes(tag));
+          && (!tag || (r.dataset.tags || '').split('|').includes(tag))
+          && (!max || (r.dataset.min && +r.dataset.min <= max));
         r.style.display = ok ? '' : 'none';
         if (ok) shown++;
       });
       if (empty) empty.hidden = shown > 0;
     }
-    function pick(t) {
-      tag = t;
-      chips.forEach(c => c.setAttribute('aria-pressed', String(c.dataset.tag === t)));
+    function paint() {
+      chips.forEach(c => c.setAttribute('aria-pressed', String(
+        c.dataset.tag ? c.dataset.tag === tag : !tag && !max)));
+      times.forEach(c => c.setAttribute('aria-pressed', String(+c.dataset.max === max)));
       apply();
     }
-    // Tapping the chosen chip again goes back to All.
-    chips.forEach(c => c.addEventListener('click', () => pick(tag === c.dataset.tag ? '' : c.dataset.tag)));
+    function pick(t) { tag = t; paint(); }
+    // Tapping the chosen chip again turns it off; All clears time too.
+    chips.forEach(c => c.addEventListener('click', () => {
+      if (!c.dataset.tag) max = 0;
+      pick(c.dataset.tag && tag === c.dataset.tag ? '' : c.dataset.tag);
+    }));
+    times.forEach(c => c.addEventListener('click', () => {
+      max = max === +c.dataset.max ? 0 : +c.dataset.max; paint();
+    }));
     input.addEventListener('input', apply);
     input.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); input.blur(); } });
-    root._rf = { reset() { input.value = ''; pick(''); } };
+    root._rf = { reset() { input.value = ''; max = 0; pick(''); } };
     apply();
   }
 
