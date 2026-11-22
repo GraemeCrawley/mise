@@ -240,6 +240,7 @@ _APP_CSS = f"""
 if (navigator.standalone === true || matchMedia('(display-mode: standalone)').matches) document.documentElement.classList.add('is-app');</script>
 <script src="{PREFIX}/static/measure.js?v=5" defer></script>
 <script src="{PREFIX}/static/ptr.js?v=5" defer></script>
+<script src="{PREFIX}/static/recipe-filter.js?v=1" defer></script>
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="theme-color" content="#FAF7F2">
@@ -248,6 +249,11 @@ if (navigator.standalone === true || matchMedia('(display-mode: standalone)').ma
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&display=swap" rel="stylesheet">
 <style>
   html, body {{ overflow-x: hidden; max-width: 100vw; }}
+  /* Recipe search + category chips (static/recipe-filter.js). */
+  .rf-chips {{ display: flex; gap: 6px; overflow-x: auto; scrollbar-width: none; -webkit-overflow-scrolling: touch; }}
+  .rf-chips::-webkit-scrollbar {{ display: none; }}
+  .rf-chip {{ flex-shrink: 0; font-size: 12px; padding: 4px 12px; border-radius: 999px; background: #f5f5f4; color: #57534e; white-space: nowrap; }}
+  .rf-chip[aria-pressed="true"] {{ background: #fef3c7; color: #78350f; font-weight: 500; }}
   /* Quantities you can tap for other units (static/measure.js). */
   .measure-tap {{ cursor: pointer; text-decoration: underline dotted #d6d3d1; text-underline-offset: 3px; }}
   .measure-menu {{ position: fixed; z-index: 90; background: #fff; border: 1px solid #e7e5e4; border-radius: 0.6rem;
@@ -820,6 +826,35 @@ def _redirect_to_app_slash() -> RedirectResponse:
     return RedirectResponse(url=PREFIX + "/app/", status_code=307)
 
 
+def _rf_attrs(r: Recipe) -> str:
+    """Row attributes the shared recipe filter (static/recipe-filter.js) reads."""
+    q = " ".join(x for x in (r.name_english, r.name_original, r.display_title()) if x).lower()
+    return f"data-q='{_h(q)}' data-tags='{_h('|'.join(r.tags or []))}'"
+
+
+def _recipe_filter(list_id: str, recipes: list[Recipe], *, placeholder: str = "Search recipes…",
+                   input_cls: str = "w-full border border-stone-200 rounded-lg px-3 py-2 bg-white text-base",
+                   q: str = "", tag: str = "", empty_id: str = "", top: int = 6) -> str:
+    """The one recipe search box + category chips, for every recipe list
+    (Library, plan pickers). Rows in #list_id need _rf_attrs()."""
+    counts: Counter[str] = Counter(t for r in recipes for t in (r.tags or []))
+    tags = (["Favourites"] if counts["Favourites"] else []) + [
+        t for t, _ in sorted(counts.items(), key=lambda kv: (-kv[1], kv[0].lower())) if t != "Favourites"][:top]
+    if tag and tag not in tags:
+        tags.append(tag)  # arrived from a recipe's tag link
+    def chip(label: str, value: str) -> str:
+        return (f"<button type='button' class='rf-chip' data-tag='{_h(value)}' "
+                f"aria-pressed='{'true' if value == tag else 'false'}'>{_h(label)}</button>")
+    chips = chip("All", "") + "".join(chip("★ Favourites" if t == "Favourites" else t, t) for t in tags)
+    return (
+        f"<div data-rf='{list_id}'" + (f" data-rf-empty='{empty_id}'" if empty_id else "") + ">"
+        f"<input type='search' class='rf-q {input_cls}' value='{_h(q)}' placeholder='{_h(placeholder)}' "
+        f"autocomplete='off' enterkeyhint='search'>"
+        + (f"<div class='rf-chips mt-2'>{chips}</div>" if tags else "")
+        + "</div>"
+    )
+
+
 @router.get("/app/", response_class=HTMLResponse)
 def library_page(
     db: Session = Depends(get_session),
@@ -839,22 +874,9 @@ def library_page(
         .where(Recipe.reviewed_at.is_(None))
     ).all())
 
-    # Tag counts (for chip row).
-    tag_counts: Counter[str] = Counter()
-    for r in all_recipes:
-        for t in (r.tags or []):
-            tag_counts[t] += 1
-
+    # Search + tag filtering happen in the browser (static/recipe-filter.js);
+    # ?q= and ?tag= only set where it starts.
     recipes = all_recipes
-    if tag:
-        recipes = [r for r in recipes if tag in (r.tags or [])]
-    if q:
-        ql = q.lower()
-        recipes = [
-            r for r in recipes
-            if ql in (r.name_english or "").lower()
-            or ql in (r.name_original or "").lower()
-        ]
 
     def _row(r: Recipe) -> str:
         thumb = (
@@ -876,12 +898,8 @@ def library_page(
             meta_bits.append(f"serves {r.servings}")
         meta = " · ".join(meta_bits)
         star = " <span class='text-amber-500 text-xs'>★</span>" if "Favourites" in (r.tags or []) else ""
-        # data-haystack drives the client-side live filter so typing
-        # doesn't trigger a full page reload (which jumps the layout
-        # under iOS keyboard).
-        haystack = _h(((r.name_english or "") + " " + (r.name_original or "")).lower())
         return f"""
-          <a href="{PREFIX}/app/recipe/{r.id}" class="library-row card p-3 flex items-center gap-3 hover:shadow-lg transition-shadow" data-haystack="{haystack}">
+          <a href="{PREFIX}/app/recipe/{r.id}" class="library-row card p-3 flex items-center gap-3 hover:shadow-lg transition-shadow" {_rf_attrs(r)}>
             {thumb}
             <div class="flex-1 min-w-0">
               <div class="serif text-lg font-medium leading-tight">{_h(name)}{star}</div>
@@ -891,35 +909,8 @@ def library_page(
             <div class="text-stone-300 shrink-0">›</div>
           </a>"""
 
-    # Chips: All + top tags.
-    chip_qs = f"&q={_h(q)}" if q else ""
-    def _chip(label: str, target: str | None) -> str:
-        is_active = (target or "") == (tag or "")
-        href = (
-            f"{PREFIX}/app/?tag={_h(target)}{chip_qs}" if target
-            else f"{PREFIX}/app/{('?q=' + _h(q)) if q else ''}"
-        )
-        cls = (
-            "bg-amber-100 text-amber-900 font-medium" if is_active
-            else "bg-stone-100 text-stone-600 hover:bg-stone-200"
-        )
-        return f"<a href='{href}' class='inline-block {cls} text-xs px-3 py-1 rounded-full'>{_h(label)}</a>"
-
-    chips = _chip("All", None) + " "
-    fav_count = sum(1 for r in all_recipes if "Favourites" in (r.tags or []))
-    if fav_count:
-        chips += _chip(f"★ Favourites", "Favourites") + " "
-    chips += " ".join(_chip(t, t) for t, _ in tag_counts.most_common(5) if t != "Favourites")
-
     if recipes:
         rows_html = "".join(_row(r) for r in recipes)
-    elif q or tag:
-        rows_html = (
-            "<div class='card p-8 text-center'>"
-            f"  <div class='serif text-2xl text-stone-400 italic mb-2'>Nothing matches.</div>"
-            f"  <a href='{PREFIX}/app/' class='text-sm text-amber-700 hover:underline'>Clear filters →</a>"
-            "</div>"
-        )
     else:
         rows_html = (
             "<div class='card p-8 text-center'>"
@@ -944,50 +935,15 @@ def library_page(
       </div>
       <p class="text-sm text-stone-500 mt-3">{len(all_recipes)} recipes{review_chip}</p>
 
-      <form method="get" action="{PREFIX}/app/" class="mt-5" id="lib-search-form">
-        {f'<input type="hidden" name="tag" value="{_h(tag)}">' if tag else ''}
-        <input id="lib-search" name="q" value="{_h(q or '')}"
-               placeholder="What shall we cook?"
-               autocomplete="off"
-               class="w-full card px-4 py-2.5 serif italic placeholder:text-stone-400 outline-none">
-      </form>
-
-      <div class="flex flex-wrap gap-1.5 mt-3 mb-5">{chips}</div>
+      <div class="mt-5 mb-5">{_recipe_filter("lib-list", recipes, placeholder="What shall we cook?",
+          input_cls="w-full card px-4 py-2.5 serif italic placeholder:text-stone-400 outline-none",
+          q=q, tag=tag, empty_id="lib-empty")}</div>
 
       <div id="lib-list" class="space-y-3">{rows_html}</div>
       <div id="lib-empty" class="card p-8 text-center" hidden>
         <div class="serif text-2xl text-stone-400 italic mb-2">Nothing matches.</div>
-        <p class="text-sm text-stone-500">Try a different word — or clear the search.</p>
+        <p class="text-sm text-stone-500">Try a different word or category.</p>
       </div>
-
-      <script>
-      (function() {{
-        // Live client-side filter. Prevents the form-submit page
-        // reload that was causing the layout to jump on every keystroke
-        // (server re-render + iOS keyboard reflow).
-        const form  = document.getElementById('lib-search-form');
-        const input = document.getElementById('lib-search');
-        const list  = document.getElementById('lib-list');
-        const empty = document.getElementById('lib-empty');
-        if (!form || !input) return;
-        const rows = list.querySelectorAll('.library-row');
-        function apply(q) {{
-          const ql = (q || '').toLowerCase().trim();
-          let visible = 0;
-          rows.forEach(r => {{
-            const match = !ql || r.dataset.haystack.includes(ql);
-            r.style.display = match ? '' : 'none';
-            if (match) visible++;
-          }});
-          empty.hidden = visible > 0 || rows.length === 0;
-        }}
-        input.addEventListener('input', () => apply(input.value));
-        form.addEventListener('submit', (e) => {{
-          e.preventDefault();
-          input.blur();   // dismiss the keyboard on Enter
-        }});
-      }})();
-      </script>
     """
     return HTMLResponse(_shell("Library", body, active="library"))
 
@@ -2213,7 +2169,7 @@ def plan_session_page(request: Request, db: Session = Depends(get_session)) -> H
         f"<button type='button' class='rc-row w-full flex items-center gap-3 px-2 py-2 rounded-lg text-left' "
         f"data-id='{r.id}' data-srv='{r.servings or 2}' data-name='{_h(r.display_title())}' "
         f"data-emoji='{_h(_recipe_emoji(r.name_english or r.name_original, r.emoji))}' "
-        f"data-q='{_h(r.display_title().lower())}' data-picked='{1 if r.id in my_picks else ''}'>"
+        f"{_rf_attrs(r)} data-picked='{1 if r.id in my_picks else ''}'>"
         f"<span class='shrink-0 w-9 h-9 rounded-lg {_recipe_color(r.id)} flex items-center justify-center'>"
         f"{_recipe_emoji(r.name_english or r.name_original, r.emoji)}</span>"
         f"<span class='flex-1 min-w-0 truncate serif'>{_h(r.display_title())}</span>"
@@ -2312,8 +2268,7 @@ def plan_session_page(request: Request, db: Session = Depends(get_session)) -> H
             <button type="button" class="sh-st rounded-lg py-2 text-sm" data-status="flex" style="background:#F5F5F4;color:#57534E">〰️ Flex</button>
             <button type="button" class="sh-st rounded-lg py-2 text-sm border border-stone-200 bg-white" data-status="home">Clear</button>
           </div>
-          <input id="sh-q" type="search" placeholder="Search recipes…" autocomplete="off"
-                 class="mt-3 w-full border border-stone-200 rounded-lg px-3 py-2 bg-white text-base">
+          <div class="mt-3">{_recipe_filter("sh-list", [r for r in recipes if r.servings])}</div>
           <div id="sh-list" class="mt-2" style="flex:1 1 0;min-height:0;overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch">{recipe_rows}</div>
           <button type="button" id="sh-done" class="mt-2 w-full text-white font-medium py-3 rounded-xl" style="display:none;background:#1C1917">Done</button>
         </div>
@@ -2341,7 +2296,7 @@ def plan_session_page(request: Request, db: Session = Depends(get_session)) -> H
           $('#sh-status').style.display = c.kind === 'slot' ? '' : 'none';
           $('#sh-done').style.display = c.kind === 'vote' ? '' : 'none';
           paintTicks();
-          $('#sh-q').value = ''; filter('');
+          RecipeFilter.reset('sh-list');
           $('#sh').style.display = 'block'; $('#sh-list').scrollTop = 0; lockPage();
           const fab = document.getElementById('fb-fab'); if (fab) fab.style.display = 'none';
         }}
@@ -2358,12 +2313,9 @@ def plan_session_page(request: Request, db: Session = Depends(get_session)) -> H
         function unlockPage() {{ const b = document.body.style;
           b.position = b.top = b.left = b.right = b.overflow = ''; window.scrollTo(0, savedY); }}
         $('#sh').addEventListener('touchmove', e => {{
-          if (!e.target.closest('#sh-list')) e.preventDefault(); }}, {{ passive: false }});
+          if (!e.target.closest('#sh-list, .rf-chips')) e.preventDefault(); }}, {{ passive: false }});
         $('#sh-x').addEventListener('click', closeSheet);
         $('#sh').addEventListener('click', e => {{ if (e.target.id === 'sh') closeSheet(); }});
-        function filter(q) {{ q = q.trim().toLowerCase();
-          document.querySelectorAll('.rc-row').forEach(r => r.style.display = !q || r.dataset.q.includes(q) ? '' : 'none'); }}
-        $('#sh-q').addEventListener('input', e => filter(e.target.value));
 
         document.querySelectorAll('.wk-cell').forEach(c => c.addEventListener('click', () => {{
           if (c.dataset.filled) {{ location.href = P + '/app/plan?start=' + c.dataset.date; return; }}
@@ -2742,7 +2694,7 @@ def plan_page(
     ).all()
     pick_rows = "".join(
         f"<button type='button' class='swap-pick flex items-center gap-3 w-full px-3 py-2 border-b border-stone-100 last:border-0 hover:bg-stone-50 text-left' "
-        f"data-recipe-id='{pr.id}' data-haystack='{_h(((pr.name_english or '') + ' ' + (pr.name_original or '')).lower())}'>"
+        f"data-recipe-id='{pr.id}' {_rf_attrs(pr)}>"
         f"  <div class='w-9 h-9 rounded-lg {_recipe_color(pr.id)} flex items-center justify-center text-base shrink-0'>"
         f"    {_recipe_emoji(pr.name_english or pr.name_original, pr.emoji)}"
         f"  </div>"
@@ -2821,8 +2773,7 @@ def plan_page(
                 <h2 id="swap-title" class="serif text-lg font-medium tracking-tight">Swap for…</h2>
                 <span class="w-12"></span>
               </div>
-              <input id="swap-filter" type="text" placeholder="Search recipes…" autocomplete="off"
-                     class="w-full border border-stone-200 rounded-lg px-3 py-2 bg-white">
+              {_recipe_filter("swap-list", pickable)}
               <!-- Free-text entry (add mode only): leftovers, eating out… -->
               <form id="note-form" class="flex gap-2 mt-2" hidden>
                 <input id="note-text" type="text" maxlength="200" autocomplete="off"
@@ -3005,7 +2956,7 @@ def plan_page(
         const swapBtn = document.getElementById('slot-swap-btn');
         const delBtn = document.getElementById('slot-del-btn');
         const status = document.getElementById('slot-status');
-        const filter = document.getElementById('swap-filter');
+        const filter = sheet.querySelector('.rf-q');
         const actionsView = sheet.querySelector('[data-view="actions"]');
         const swapView = sheet.querySelector('[data-view="swap"]');
         let ctx = {{}};
@@ -3102,8 +3053,7 @@ def plan_page(
           openSwapFullscreen();
           noteForm.hidden = true; noteQuick.hidden = true;
           swapTitle.textContent = 'Swap for…';
-          filter.value = '';
-          filterList('');
+          RecipeFilter.reset('swap-list');
           setTimeout(() => filter.focus(), 50);
         }});
 
@@ -3159,13 +3109,6 @@ def plan_page(
           }});
         }}
 
-        function filterList(q) {{
-          const ql = q.toLowerCase();
-          swapView.querySelectorAll('.swap-pick').forEach(b => {{
-            b.style.display = (!ql || b.dataset.haystack.includes(ql)) ? '' : 'none';
-          }});
-        }}
-        filter.addEventListener('input', () => filterList(filter.value));
 
         swapView.querySelectorAll('.swap-pick').forEach(btn => {{
           btn.addEventListener('click', async () => {{
@@ -3206,8 +3149,7 @@ def plan_page(
             openSwapFullscreen();
             noteForm.hidden = false; noteQuick.hidden = false;
             noteText.value = '';
-            filter.value = '';
-            filterList('');
+            RecipeFilter.reset('swap-list');
             show();
             setTimeout(() => filter.focus(), 50);
           }});
@@ -3453,7 +3395,7 @@ def plan_page(
             title.textContent = ctx.recipeName;
             viewLink.href = '{PREFIX}/app/recipe/' + ctx.recipeId;
             openSwapFullscreen();
-            filter.value = ''; filterList('');
+            RecipeFilter.reset('swap-list');
             show();
             row.classList.remove('is-open');
             openRow = null;
